@@ -1,0 +1,17 @@
+*.cf
+*.cfe
+*.epf
+*.erf
+*.cfu
+
+src/ConfigDumpInfo.xml
+ConfigDumpInfo.xml
+
+src/CommonTemplates/**/*.bin
+v8r_TempDB
+.env
+.scannerwork
+.vscode
+.packman
+.build
+build
