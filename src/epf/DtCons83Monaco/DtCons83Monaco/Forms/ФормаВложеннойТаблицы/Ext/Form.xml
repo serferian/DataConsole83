@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.15">
+	<Title>
+		<v8:item>
+			<v8:lang>ru</v8:lang>
+			<v8:content>Таблица значений</v8:content>
+		</v8:item>
+	</Title>
+	<AutoTitle>false</AutoTitle>
+	<CommandBarLocation>None</CommandBarLocation>
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1"/>
+	<Events>
+		<Event name="NotificationProcessing">ОбработкаОповещения</Event>
+		<Event name="OnOpen">ПриОткрытии</Event>
+		<Event name="OnClose">ПриЗакрытии</Event>
+	</Events>
+	<ChildItems>
+		<Table name="КолонкиТаблицы" id="14">
+			<Representation>List</Representation>
+			<AutoInsertNewRow>true</AutoInsertNewRow>
+			<EnableStartDrag>true</EnableStartDrag>
+			<EnableDrag>true</EnableDrag>
+			<FileDragMode>AsFile</FileDragMode>
+			<DataPath>КолонкиТаблицы</DataPath>
+			<RowFilter xsi:nil="true"/>
+			<ContextMenu name="КолонкиТаблицыКонтекстноеМеню" id="15"/>
+			<AutoCommandBar name="КолонкиТаблицыКоманднаяПанель" id="16"/>
+			<ExtendedTooltip name="КолонкиТаблицыРасширеннаяПодсказка" id="17"/>
+			<SearchStringAddition name="КолонкиТаблицыСтрокаПоиска" id="18">
+				<AdditionSource>
+					<Item>КолонкиТаблицы</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="КолонкиТаблицыСтрокаПоискаКонтекстноеМеню" id="19"/>
+				<ExtendedTooltip name="КолонкиТаблицыСтрокаПоискаРасширеннаяПодсказка" id="20"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="КолонкиТаблицыСостояниеПросмотра" id="21">
+				<AdditionSource>
+					<Item>КолонкиТаблицы</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="КолонкиТаблицыСостояниеПросмотраКонтекстноеМеню" id="22"/>
+				<ExtendedTooltip name="КолонкиТаблицыСостояниеПросмотраРасширеннаяПодсказка" id="23"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="КолонкиТаблицыУправлениеПоиском" id="24">
+				<AdditionSource>
+					<Item>КолонкиТаблицы</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="КолонкиТаблицыУправлениеПоискомКонтекстноеМеню" id="25"/>
+				<ExtendedTooltip name="КолонкиТаблицыУправлениеПоискомРасширеннаяПодсказка" id="26"/>
+			</SearchControlAddition>
+			<Events>
+				<Event name="OnEditEnd">КолонкиТаблицыПриОкончанииРедактирования</Event>
+				<Event name="BeforeDeleteRow">КолонкиТаблицыПередУдалением</Event>
+				<Event name="BeforeEditEnd">КолонкиТаблицыПередОкончаниемРедактирования</Event>
+				<Event name="BeforeRowChange">КолонкиТаблицыПередНачаломИзменения</Event>
+				<Event name="AfterDeleteRow">КолонкиТаблицыПослеУдаления</Event>
+			</Events>
+			<ChildItems>
+				<InputField name="КолонкиТаблицыИмя" id="27">
+					<DataPath>КолонкиТаблицы.Имя</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="КолонкиТаблицыИмяКонтекстноеМеню" id="28"/>
+					<ExtendedTooltip name="КолонкиТаблицыИмяРасширеннаяПодсказка" id="29"/>
+				</InputField>
+				<InputField name="КолонкиТаблицыТипЗначения" id="30">
+					<DataPath>КолонкиТаблицы.ТипЗначения</DataPath>
+					<EditMode>EnterOnInput</EditMode>
+					<ContextMenu name="КолонкиТаблицыТипЗначенияКонтекстноеМеню" id="31"/>
+					<ExtendedTooltip name="КолонкиТаблицыТипЗначенияРасширеннаяПодсказка" id="32"/>
+				</InputField>
+			</ChildItems>
+		</Table>
+		<Table name="ВложеннаяТаблица" id="1">
+			<Representation>List</Representation>
+			<ReadOnly>true</ReadOnly>
+			<AutoInsertNewRow>true</AutoInsertNewRow>
+			<EnableStartDrag>true</EnableStartDrag>
+			<EnableDrag>true</EnableDrag>
+			<FileDragMode>AsFile</FileDragMode>
+			<DataPath>ВложеннаяТаблица</DataPath>
+			<RowFilter xsi:nil="true"/>
+			<ContextMenu name="ВложеннаяТаблицаКонтекстноеМеню" id="2"/>
+			<AutoCommandBar name="ВложеннаяТаблицаКоманднаяПанель" id="3"/>
+			<ExtendedTooltip name="ВложеннаяТаблицаРасширеннаяПодсказка" id="4"/>
+			<SearchStringAddition name="ВложеннаяТаблицаСтрокаПоиска" id="5">
+				<AdditionSource>
+					<Item>ВложеннаяТаблица</Item>
+					<Type>SearchStringRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ВложеннаяТаблицаСтрокаПоискаКонтекстноеМеню" id="6"/>
+				<ExtendedTooltip name="ВложеннаяТаблицаСтрокаПоискаРасширеннаяПодсказка" id="7"/>
+			</SearchStringAddition>
+			<ViewStatusAddition name="ВложеннаяТаблицаСостояниеПросмотра" id="8">
+				<AdditionSource>
+					<Item>ВложеннаяТаблица</Item>
+					<Type>ViewStatusRepresentation</Type>
+				</AdditionSource>
+				<ContextMenu name="ВложеннаяТаблицаСостояниеПросмотраКонтекстноеМеню" id="9"/>
+				<ExtendedTooltip name="ВложеннаяТаблицаСостояниеПросмотраРасширеннаяПодсказка" id="10"/>
+			</ViewStatusAddition>
+			<SearchControlAddition name="ВложеннаяТаблицаУправлениеПоиском" id="11">
+				<AdditionSource>
+					<Item>ВложеннаяТаблица</Item>
+					<Type>SearchControl</Type>
+				</AdditionSource>
+				<ContextMenu name="ВложеннаяТаблицаУправлениеПоискомКонтекстноеМеню" id="12"/>
+				<ExtendedTooltip name="ВложеннаяТаблицаУправлениеПоискомРасширеннаяПодсказка" id="13"/>
+			</SearchControlAddition>
+			<Events>
+				<Event name="Selection">ВложеннаяТаблицаВыбор</Event>
+			</Events>
+		</Table>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="ВложеннаяТаблица" id="2">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Вложенная таблица</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="АдресТаблицы" id="1">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Адрес таблицы</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+		</Attribute>
+		<Attribute name="КолонкиТаблицы" id="3">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Колонки таблицы</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>v8:ValueTable</v8:Type>
+			</Type>
+			<Columns>
+				<Column name="Имя" id="1">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Имя</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="ТипЗначения" id="2">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Тип значения</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>v8:TypeDescription</v8:Type>
+					</Type>
+				</Column>
+			</Columns>
+		</Attribute>
+		<Attribute name="РежимРедактирования" id="4">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Режим редактирования</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+		</Attribute>
+		<Attribute name="Объект" id="5">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Объект</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>0</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+			<MainAttribute>true</MainAttribute>
+		</Attribute>
+	</Attributes>
+</Form>
