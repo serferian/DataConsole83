@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.15">
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcssch="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.16">
 	<AutoSaveDataInSettings>Use</AutoSaveDataInSettings>
 	<AutoTitle>false</AutoTitle>
 	<ScalingMode>Compact</ScalingMode>
@@ -1459,242 +1459,269 @@
 				</UsualGroup>
 			</ChildItems>
 		</UsualGroup>
-		<Table name="Выгрузка" id="4">
-			<Representation>List</Representation>
-			<CommandBarLocation>None</CommandBarLocation>
-			<HeightInTableRows>4</HeightInTableRows>
-			<Footer>true</Footer>
-			<UseAlternationRowColor>true</UseAlternationRowColor>
-			<AutoAddIncomplete>false</AutoAddIncomplete>
-			<EnableStartDrag>true</EnableStartDrag>
-			<EnableDrag>true</EnableDrag>
-			<FileDragMode>AsFile</FileDragMode>
-			<DataPath>Выгрузка</DataPath>
-			<Shortcut>Ctrl+4</Shortcut>
+		<UsualGroup name="ГруппаРезультат" id="473">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Группа результат</v8:content>
+				</v8:item>
+			</Title>
 			<ToolTip>
 				<v8:item>
 					<v8:lang>ru</v8:lang>
-					<v8:content>Последняя выборка данных</v8:content>
-				</v8:item>
-				<v8:item>
-					<v8:lang>en</v8:lang>
-					<v8:content>Last results table</v8:content>
+					<v8:content>Группа результат</v8:content>
 				</v8:item>
 			</ToolTip>
-			<SearchStringLocation>PullFromTop</SearchStringLocation>
-			<ViewStatusLocation>Top</ViewStatusLocation>
-			<SearchControlLocation>CommandBar</SearchControlLocation>
-			<RowFilter xsi:nil="true"/>
-			<ContextMenu name="ВыгрузкаКонтекстноеМеню" id="5">
-				<ChildItems>
-					<ButtonGroup name="ВыгрузкаМенюУтилиты" id="161">
-						<Title>
-							<v8:item>
-								<v8:lang>ru</v8:lang>
-								<v8:content>Функции таблицы выгрузки</v8:content>
-							</v8:item>
-							<v8:item>
-								<v8:lang>en</v8:lang>
-								<v8:content>Result table functions</v8:content>
-							</v8:item>
-						</Title>
-						<ToolTip>
-							<v8:item>
-								<v8:lang>ru</v8:lang>
-								<v8:content>Функции таблицы выгрузки</v8:content>
-							</v8:item>
-							<v8:item>
-								<v8:lang>en</v8:lang>
-								<v8:content>Result table functions</v8:content>
-							</v8:item>
-						</ToolTip>
-						<ExtendedTooltip name="ВыгрузкаМенюУтилитыРасширеннаяПодсказка" id="162"/>
-						<ChildItems>
-							<Button name="ВыгрузкаМенюЯчейкаТипЗначения" id="271">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Command.ЯчейкаТипЗначения</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюЯчейкаТипЗначенияРасширеннаяПодсказка" id="272"/>
-							</Button>
-							<Button name="ВыгрузкаМенюОчистить" id="163">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Command.ВыгрузкаОчистить</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюОчиститьРасширеннаяПодсказка" id="164"/>
-							</Button>
-						</ChildItems>
-					</ButtonGroup>
-					<Popup name="ВыгрузкаМенюФайлы" id="281">
-						<Title>
-							<v8:item>
-								<v8:lang>ru</v8:lang>
-								<v8:content>Выгрузка / загрузка данных</v8:content>
-							</v8:item>
-							<v8:item>
-								<v8:lang>en</v8:lang>
-								<v8:content>Data save / restore</v8:content>
-							</v8:item>
-						</Title>
-						<ToolTip>
-							<v8:item>
-								<v8:lang>ru</v8:lang>
-								<v8:content>Команды выгрузки и загрузки данных с внешними файлам</v8:content>
-							</v8:item>
-							<v8:item>
-								<v8:lang>en</v8:lang>
-								<v8:content>Commands of saves and loads data with external files</v8:content>
-							</v8:item>
-						</ToolTip>
-						<ExtendedTooltip name="ВыгрузкаМенюФайлыРасширеннаяПодсказка" id="282"/>
-						<ChildItems>
-							<Button name="ВыгрузкаМенюВывести" id="121">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Item.Выгрузка.StandardCommand.OutputList</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюВывестиРасширеннаяПодсказка" id="122"/>
-							</Button>
-							<Button name="ВыгрузкаМенюСохранитьДамп" id="277">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Command.ВыгрузкаСохранитьДамп</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюСохранитьДампРасширеннаяПодсказка" id="278"/>
-							</Button>
-							<Button name="ВыгрузкаМенюЗагрузитьФайл" id="279">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Command.ВыгрузкаЗагрузитьФайл</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюЗагрузитьФайлРасширеннаяПодсказка" id="280"/>
-							</Button>
-						</ChildItems>
-					</Popup>
-					<ButtonGroup name="ВыгрузкаМенюПоиск" id="127">
-						<ExtendedTooltip name="ВыгрузкаМенюПоискРасширеннаяПодсказка" id="128"/>
-						<ChildItems>
-							<Button name="ВыгрузкаМенюНайти" id="129">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Item.Выгрузка.StandardCommand.Find</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюНайтиРасширеннаяПодсказка" id="130"/>
-							</Button>
-							<Button name="ВыгрузкаМенюОтменитьПоиск" id="131">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Item.Выгрузка.StandardCommand.CancelSearch</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюОтменитьПоискРасширеннаяПодсказка" id="132"/>
-							</Button>
-						</ChildItems>
-					</ButtonGroup>
-					<ButtonGroup name="ВыгрузкаМенюСортировка" id="119">
-						<ExtendedTooltip name="ВыгрузкаМенюСортировкаРасширеннаяПодсказка" id="120"/>
-						<ChildItems>
-							<Button name="ВыгрузкаМенюВозрастание" id="123">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Item.Выгрузка.StandardCommand.SortListAsc</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюВозрастаниеРасширеннаяПодсказка" id="124"/>
-							</Button>
-							<Button name="ВыгрузкаМенюУбывание" id="125">
-								<Type>CommandBarButton</Type>
-								<CommandName>Form.Item.Выгрузка.StandardCommand.SortListDesc</CommandName>
-								<ExtendedTooltip name="ВыгрузкаМенюУбываниеРасширеннаяПодсказка" id="126"/>
-							</Button>
-						</ChildItems>
-					</ButtonGroup>
-				</ChildItems>
-			</ContextMenu>
-			<AutoCommandBar name="ВыгрузкаКоманднаяПанель" id="6"/>
-			<ExtendedTooltip name="ВыгрузкаРасширеннаяПодсказка" id="7"/>
-			<SearchStringAddition name="ВыгрузкаСтрокаПоиска" id="8">
-				<AdditionSource>
-					<Item>Выгрузка</Item>
-					<Type>SearchStringRepresentation</Type>
-				</AdditionSource>
-				<ContextMenu name="ВыгрузкаСтрокаПоискаКонтекстноеМеню" id="9"/>
-				<ExtendedTooltip name="ВыгрузкаСтрокаПоискаРасширеннаяПодсказка" id="10"/>
-			</SearchStringAddition>
-			<ViewStatusAddition name="ВыгрузкаСостояниеПросмотра" id="11">
-				<AdditionSource>
-					<Item>Выгрузка</Item>
-					<Type>ViewStatusRepresentation</Type>
-				</AdditionSource>
-				<ContextMenu name="ВыгрузкаСостояниеПросмотраКонтекстноеМеню" id="12"/>
-				<ExtendedTooltip name="ВыгрузкаСостояниеПросмотраРасширеннаяПодсказка" id="13"/>
-			</ViewStatusAddition>
-			<SearchControlAddition name="ВыгрузкаУправлениеПоиском" id="14">
-				<AdditionSource>
-					<Item>Выгрузка</Item>
-					<Type>SearchControl</Type>
-				</AdditionSource>
-				<ContextMenu name="ВыгрузкаУправлениеПоискомКонтекстноеМеню" id="15"/>
-				<ExtendedTooltip name="ВыгрузкаУправлениеПоискомРасширеннаяПодсказка" id="16"/>
-			</SearchControlAddition>
-			<Events>
-				<Event name="Selection">ВыгрузкаВыбор</Event>
-			</Events>
+			<Behavior>Usual</Behavior>
+			<Representation>None</Representation>
+			<ShowTitle>false</ShowTitle>
+			<ExtendedTooltip name="ГруппаРезультатРасширеннаяПодсказка" id="474"/>
 			<ChildItems>
-				<InputField name="Выгрузка_К" id="17">
-					<DataPath>Выгрузка._К</DataPath>
-					<ReadOnly>true</ReadOnly>
-					<EditMode>EnterOnInput</EditMode>
-					<FooterHorizontalAlign>Right</FooterHorizontalAlign>
-					<Width>5</Width>
-					<HorizontalStretch>false</HorizontalStretch>
-					<ContextMenu name="Выгрузка_ККонтекстноеМеню" id="18"/>
-					<ExtendedTooltip name="Выгрузка_КРасширеннаяПодсказка" id="19"/>
-				</InputField>
-				<InputField name="Выгрузка_П" id="104">
-					<DataPath>Выгрузка._П</DataPath>
-					<Enabled>false</Enabled>
-					<ReadOnly>true</ReadOnly>
-					<EditMode>EnterOnInput</EditMode>
-					<ContextMenu name="Выгрузка_ПКонтекстноеМеню" id="105"/>
-					<ExtendedTooltip name="Выгрузка_ПРасширеннаяПодсказка" id="106"/>
-				</InputField>
+				<Table name="ВыгрузкаДерево" id="385">
+					<Representation>Tree</Representation>
+					<Visible>false</Visible>
+					<AutoInsertNewRow>true</AutoInsertNewRow>
+					<EnableStartDrag>true</EnableStartDrag>
+					<EnableDrag>true</EnableDrag>
+					<DataPath>ВыгрузкаДерево</DataPath>
+					<SearchStringLocation>PullFromTop</SearchStringLocation>
+					<SearchControlLocation>CommandBar</SearchControlLocation>
+					<ContextMenu name="ВыгрузкаДеревоКонтекстноеМеню" id="386"/>
+					<AutoCommandBar name="ВыгрузкаДеревоКоманднаяПанель" id="387"/>
+					<ExtendedTooltip name="ВыгрузкаДеревоРасширеннаяПодсказка" id="388"/>
+					<SearchStringAddition name="ВыгрузкаДеревоСтрокаПоиска" id="389">
+						<AdditionSource>
+							<Item>ВыгрузкаДерево</Item>
+							<Type>SearchStringRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ВыгрузкаДеревоСтрокаПоискаКонтекстноеМеню" id="390"/>
+						<ExtendedTooltip name="ВыгрузкаДеревоСтрокаПоискаРасширеннаяПодсказка" id="391"/>
+					</SearchStringAddition>
+					<ViewStatusAddition name="ВыгрузкаДеревоСостояниеПросмотра" id="392">
+						<AdditionSource>
+							<Item>ВыгрузкаДерево</Item>
+							<Type>ViewStatusRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ВыгрузкаДеревоСостояниеПросмотраКонтекстноеМеню" id="393"/>
+						<ExtendedTooltip name="ВыгрузкаДеревоСостояниеПросмотраРасширеннаяПодсказка" id="394"/>
+					</ViewStatusAddition>
+					<SearchControlAddition name="ВыгрузкаДеревоУправлениеПоиском" id="395">
+						<AdditionSource>
+							<Item>ВыгрузкаДерево</Item>
+							<Type>SearchControl</Type>
+						</AdditionSource>
+						<ContextMenu name="ВыгрузкаДеревоУправлениеПоискомКонтекстноеМеню" id="396"/>
+						<ExtendedTooltip name="ВыгрузкаДеревоУправлениеПоискомРасширеннаяПодсказка" id="397"/>
+					</SearchControlAddition>
+					<ChildItems>
+						<InputField name="ВыгрузкаДерево_К" id="398">
+							<DataPath>ВыгрузкаДерево._К</DataPath>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="ВыгрузкаДерево_ККонтекстноеМеню" id="399"/>
+							<ExtendedTooltip name="ВыгрузкаДерево_КРасширеннаяПодсказка" id="400"/>
+						</InputField>
+						<InputField name="ВыгрузкаДерево_П" id="401">
+							<DataPath>ВыгрузкаДерево._П</DataPath>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="ВыгрузкаДерево_ПКонтекстноеМеню" id="402"/>
+							<ExtendedTooltip name="ВыгрузкаДерево_ПРасширеннаяПодсказка" id="403"/>
+						</InputField>
+					</ChildItems>
+				</Table>
+				<Table name="Выгрузка" id="4">
+					<Representation>List</Representation>
+					<HeightInTableRows>4</HeightInTableRows>
+					<Footer>true</Footer>
+					<UseAlternationRowColor>true</UseAlternationRowColor>
+					<AutoAddIncomplete>false</AutoAddIncomplete>
+					<EnableStartDrag>true</EnableStartDrag>
+					<EnableDrag>true</EnableDrag>
+					<FileDragMode>AsFile</FileDragMode>
+					<DataPath>Выгрузка</DataPath>
+					<Shortcut>Ctrl+4</Shortcut>
+					<ToolTip>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Последняя выборка данных</v8:content>
+						</v8:item>
+						<v8:item>
+							<v8:lang>en</v8:lang>
+							<v8:content>Last results table</v8:content>
+						</v8:item>
+					</ToolTip>
+					<SearchStringLocation>PullFromTop</SearchStringLocation>
+					<ViewStatusLocation>Top</ViewStatusLocation>
+					<SearchControlLocation>CommandBar</SearchControlLocation>
+					<RowFilter xsi:nil="true"/>
+					<ContextMenu name="ВыгрузкаКонтекстноеМеню" id="5">
+						<ChildItems>
+							<ButtonGroup name="ВыгрузкаМенюУтилиты" id="161">
+								<Title>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Функции таблицы выгрузки</v8:content>
+									</v8:item>
+									<v8:item>
+										<v8:lang>en</v8:lang>
+										<v8:content>Result table functions</v8:content>
+									</v8:item>
+								</Title>
+								<ToolTip>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Функции таблицы выгрузки</v8:content>
+									</v8:item>
+									<v8:item>
+										<v8:lang>en</v8:lang>
+										<v8:content>Result table functions</v8:content>
+									</v8:item>
+								</ToolTip>
+								<ExtendedTooltip name="ВыгрузкаМенюУтилитыРасширеннаяПодсказка" id="162"/>
+								<ChildItems>
+									<Button name="ВыгрузкаМенюЯчейкаТипЗначения" id="271">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ЯчейкаТипЗначения</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюЯчейкаТипЗначенияРасширеннаяПодсказка" id="272"/>
+									</Button>
+									<Button name="ВыгрузкаМенюОчистить" id="163">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ВыгрузкаОчистить</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюОчиститьРасширеннаяПодсказка" id="164"/>
+									</Button>
+								</ChildItems>
+							</ButtonGroup>
+							<Popup name="ВыгрузкаМенюФайлы" id="281">
+								<Title>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Выгрузка / загрузка данных</v8:content>
+									</v8:item>
+									<v8:item>
+										<v8:lang>en</v8:lang>
+										<v8:content>Data save / restore</v8:content>
+									</v8:item>
+								</Title>
+								<ToolTip>
+									<v8:item>
+										<v8:lang>ru</v8:lang>
+										<v8:content>Команды выгрузки и загрузки данных с внешними файлам</v8:content>
+									</v8:item>
+									<v8:item>
+										<v8:lang>en</v8:lang>
+										<v8:content>Commands of saves and loads data with external files</v8:content>
+									</v8:item>
+								</ToolTip>
+								<ExtendedTooltip name="ВыгрузкаМенюФайлыРасширеннаяПодсказка" id="282"/>
+								<ChildItems>
+									<Button name="ВыгрузкаМенюВывести" id="121">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Выгрузка.StandardCommand.OutputList</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюВывестиРасширеннаяПодсказка" id="122"/>
+									</Button>
+									<Button name="ВыгрузкаМенюСохранитьДамп" id="277">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ВыгрузкаСохранитьДамп</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюСохранитьДампРасширеннаяПодсказка" id="278"/>
+									</Button>
+									<Button name="ВыгрузкаМенюЗагрузитьФайл" id="279">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ВыгрузкаЗагрузитьФайл</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюЗагрузитьФайлРасширеннаяПодсказка" id="280"/>
+									</Button>
+								</ChildItems>
+							</Popup>
+							<ButtonGroup name="ВыгрузкаМенюПоиск" id="127">
+								<ExtendedTooltip name="ВыгрузкаМенюПоискРасширеннаяПодсказка" id="128"/>
+								<ChildItems>
+									<Button name="ВыгрузкаМенюНайти" id="129">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Выгрузка.StandardCommand.Find</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюНайтиРасширеннаяПодсказка" id="130"/>
+									</Button>
+									<Button name="ВыгрузкаМенюОтменитьПоиск" id="131">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Выгрузка.StandardCommand.CancelSearch</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюОтменитьПоискРасширеннаяПодсказка" id="132"/>
+									</Button>
+								</ChildItems>
+							</ButtonGroup>
+							<ButtonGroup name="ВыгрузкаМенюСортировка" id="119">
+								<ExtendedTooltip name="ВыгрузкаМенюСортировкаРасширеннаяПодсказка" id="120"/>
+								<ChildItems>
+									<Button name="ВыгрузкаМенюВозрастание" id="123">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Выгрузка.StandardCommand.SortListAsc</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюВозрастаниеРасширеннаяПодсказка" id="124"/>
+									</Button>
+									<Button name="ВыгрузкаМенюУбывание" id="125">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Item.Выгрузка.StandardCommand.SortListDesc</CommandName>
+										<ExtendedTooltip name="ВыгрузкаМенюУбываниеРасширеннаяПодсказка" id="126"/>
+									</Button>
+								</ChildItems>
+							</ButtonGroup>
+						</ChildItems>
+					</ContextMenu>
+					<AutoCommandBar name="ВыгрузкаКоманднаяПанель" id="6">
+						<ChildItems>
+							<Button name="ВыгрузкаСохранитьВCSV" id="475">
+								<Type>CommandBarButton</Type>
+								<CommandName>Form.Command.СохранитьВCSV</CommandName>
+								<ExtendedTooltip name="ВыгрузкаСохранитьВCSVРасширеннаяПодсказка" id="476"/>
+							</Button>
+						</ChildItems>
+					</AutoCommandBar>
+					<ExtendedTooltip name="ВыгрузкаРасширеннаяПодсказка" id="7"/>
+					<SearchStringAddition name="ВыгрузкаСтрокаПоиска" id="8">
+						<AdditionSource>
+							<Item>Выгрузка</Item>
+							<Type>SearchStringRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ВыгрузкаСтрокаПоискаКонтекстноеМеню" id="9"/>
+						<ExtendedTooltip name="ВыгрузкаСтрокаПоискаРасширеннаяПодсказка" id="10"/>
+					</SearchStringAddition>
+					<ViewStatusAddition name="ВыгрузкаСостояниеПросмотра" id="11">
+						<AdditionSource>
+							<Item>Выгрузка</Item>
+							<Type>ViewStatusRepresentation</Type>
+						</AdditionSource>
+						<ContextMenu name="ВыгрузкаСостояниеПросмотраКонтекстноеМеню" id="12"/>
+						<ExtendedTooltip name="ВыгрузкаСостояниеПросмотраРасширеннаяПодсказка" id="13"/>
+					</ViewStatusAddition>
+					<SearchControlAddition name="ВыгрузкаУправлениеПоиском" id="14">
+						<AdditionSource>
+							<Item>Выгрузка</Item>
+							<Type>SearchControl</Type>
+						</AdditionSource>
+						<ContextMenu name="ВыгрузкаУправлениеПоискомКонтекстноеМеню" id="15"/>
+						<ExtendedTooltip name="ВыгрузкаУправлениеПоискомРасширеннаяПодсказка" id="16"/>
+					</SearchControlAddition>
+					<Events>
+						<Event name="Selection">ВыгрузкаВыбор</Event>
+					</Events>
+					<ChildItems>
+						<InputField name="Выгрузка_К" id="17">
+							<DataPath>Выгрузка._К</DataPath>
+							<ReadOnly>true</ReadOnly>
+							<EditMode>EnterOnInput</EditMode>
+							<FooterHorizontalAlign>Right</FooterHorizontalAlign>
+							<Width>5</Width>
+							<HorizontalStretch>false</HorizontalStretch>
+							<ContextMenu name="Выгрузка_ККонтекстноеМеню" id="18"/>
+							<ExtendedTooltip name="Выгрузка_КРасширеннаяПодсказка" id="19"/>
+						</InputField>
+						<InputField name="Выгрузка_П" id="104">
+							<DataPath>Выгрузка._П</DataPath>
+							<Enabled>false</Enabled>
+							<ReadOnly>true</ReadOnly>
+							<EditMode>EnterOnInput</EditMode>
+							<ContextMenu name="Выгрузка_ПКонтекстноеМеню" id="105"/>
+							<ExtendedTooltip name="Выгрузка_ПРасширеннаяПодсказка" id="106"/>
+						</InputField>
+					</ChildItems>
+				</Table>
 			</ChildItems>
-		</Table>
-		<Table name="ВыгрузкаДерево" id="385">
-			<Representation>Tree</Representation>
-			<Visible>false</Visible>
-			<AutoInsertNewRow>true</AutoInsertNewRow>
-			<EnableStartDrag>true</EnableStartDrag>
-			<EnableDrag>true</EnableDrag>
-			<DataPath>ВыгрузкаДерево</DataPath>
-			<SearchStringLocation>PullFromTop</SearchStringLocation>
-			<SearchControlLocation>CommandBar</SearchControlLocation>
-			<ContextMenu name="ВыгрузкаДеревоКонтекстноеМеню" id="386"/>
-			<AutoCommandBar name="ВыгрузкаДеревоКоманднаяПанель" id="387"/>
-			<ExtendedTooltip name="ВыгрузкаДеревоРасширеннаяПодсказка" id="388"/>
-			<SearchStringAddition name="ВыгрузкаДеревоСтрокаПоиска" id="389">
-				<AdditionSource>
-					<Item>ВыгрузкаДерево</Item>
-					<Type>SearchStringRepresentation</Type>
-				</AdditionSource>
-				<ContextMenu name="ВыгрузкаДеревоСтрокаПоискаКонтекстноеМеню" id="390"/>
-				<ExtendedTooltip name="ВыгрузкаДеревоСтрокаПоискаРасширеннаяПодсказка" id="391"/>
-			</SearchStringAddition>
-			<ViewStatusAddition name="ВыгрузкаДеревоСостояниеПросмотра" id="392">
-				<AdditionSource>
-					<Item>ВыгрузкаДерево</Item>
-					<Type>ViewStatusRepresentation</Type>
-				</AdditionSource>
-				<ContextMenu name="ВыгрузкаДеревоСостояниеПросмотраКонтекстноеМеню" id="393"/>
-				<ExtendedTooltip name="ВыгрузкаДеревоСостояниеПросмотраРасширеннаяПодсказка" id="394"/>
-			</ViewStatusAddition>
-			<SearchControlAddition name="ВыгрузкаДеревоУправлениеПоиском" id="395">
-				<AdditionSource>
-					<Item>ВыгрузкаДерево</Item>
-					<Type>SearchControl</Type>
-				</AdditionSource>
-				<ContextMenu name="ВыгрузкаДеревоУправлениеПоискомКонтекстноеМеню" id="396"/>
-				<ExtendedTooltip name="ВыгрузкаДеревоУправлениеПоискомРасширеннаяПодсказка" id="397"/>
-			</SearchControlAddition>
-			<ChildItems>
-				<InputField name="ВыгрузкаДерево_К" id="398">
-					<DataPath>ВыгрузкаДерево._К</DataPath>
-					<EditMode>EnterOnInput</EditMode>
-					<ContextMenu name="ВыгрузкаДерево_ККонтекстноеМеню" id="399"/>
-					<ExtendedTooltip name="ВыгрузкаДерево_КРасширеннаяПодсказка" id="400"/>
-				</InputField>
-				<InputField name="ВыгрузкаДерево_П" id="401">
-					<DataPath>ВыгрузкаДерево._П</DataPath>
-					<EditMode>EnterOnInput</EditMode>
-					<ContextMenu name="ВыгрузкаДерево_ПКонтекстноеМеню" id="402"/>
-					<ExtendedTooltip name="ВыгрузкаДерево_ПРасширеннаяПодсказка" id="403"/>
-				</InputField>
-			</ChildItems>
-		</Table>
+		</UsualGroup>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Объект" id="1">
@@ -1847,7 +1874,7 @@
 						<v8:Type>xs:decimal</v8:Type>
 						<v8:Type>v8:TypeDescription</v8:Type>
 						<v8:Type>v8:UUID</v8:Type>
-						<v8:TypeSet>cfg:AnyRef</v8:TypeSet>
+						<v8:TypeSet>cfg:AnyIBRef</v8:TypeSet>
 						<v8:NumberQualifiers>
 							<v8:Digits>10</v8:Digits>
 							<v8:FractionDigits>0</v8:FractionDigits>
@@ -2246,7 +2273,7 @@
 			<Type>
 				<v8:Type>xs:decimal</v8:Type>
 				<v8:NumberQualifiers>
-					<v8:Digits>1</v8:Digits>
+					<v8:Digits>2</v8:Digits>
 					<v8:FractionDigits>0</v8:FractionDigits>
 					<v8:AllowedSign>Nonnegative</v8:AllowedSign>
 				</v8:NumberQualifiers>
@@ -2554,9 +2581,6 @@
 					<v8:AllowedLength>Variable</v8:AllowedLength>
 				</v8:StringQualifiers>
 			</Type>
-			<Save>
-				<Field>КаталогИсходников</Field>
-			</Save>
 		</Attribute>
 		<Attribute name="ОригинальныйКод" id="31">
 			<Title>
@@ -3550,6 +3574,25 @@
 				<xr:LoadTransparent>true</xr:LoadTransparent>
 			</Picture>
 			<Action>ВывестиВТабДок</Action>
+		</Command>
+		<Command name="СохранитьВCSV" id="38">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Сохранить ВCSV</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Сохранить ВCSV</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Picture>
+				<xr:Ref>StdPicture.Print</xr:Ref>
+				<xr:LoadTransparent>true</xr:LoadTransparent>
+			</Picture>
+			<Action>СохранитьВCSV</Action>
 		</Command>
 	</Commands>
 </Form>
