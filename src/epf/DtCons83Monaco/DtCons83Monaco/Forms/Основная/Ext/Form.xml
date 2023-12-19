@@ -2404,38 +2404,9 @@
 					<v8:AllowedLength>Variable</v8:AllowedLength>
 				</v8:StringQualifiers>
 			</Type>
-		</Attribute>
-		<Attribute name="НачалоВыполнения" id="4">
-			<Title>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>Начало выполнения</v8:content>
-				</v8:item>
-			</Title>
-			<Type>
-				<v8:Type>xs:decimal</v8:Type>
-				<v8:NumberQualifiers>
-					<v8:Digits>15</v8:Digits>
-					<v8:FractionDigits>0</v8:FractionDigits>
-					<v8:AllowedSign>Any</v8:AllowedSign>
-				</v8:NumberQualifiers>
-			</Type>
-		</Attribute>
-		<Attribute name="ОкончаниеВыполнения" id="16">
-			<Title>
-				<v8:item>
-					<v8:lang>ru</v8:lang>
-					<v8:content>Окончание выполнения</v8:content>
-				</v8:item>
-			</Title>
-			<Type>
-				<v8:Type>xs:decimal</v8:Type>
-				<v8:NumberQualifiers>
-					<v8:Digits>15</v8:Digits>
-					<v8:FractionDigits>0</v8:FractionDigits>
-					<v8:AllowedSign>Any</v8:AllowedSign>
-				</v8:NumberQualifiers>
-			</Type>
+			<Save>
+				<Field>ТекущийАлгоритм</Field>
+			</Save>
 		</Attribute>
 		<Attribute name="АдресМакета" id="17">
 			<Title>
@@ -2810,6 +2781,22 @@
 			<Save>
 				<Field>ВключеныЗамерыЗапросов</Field>
 			</Save>
+		</Attribute>
+		<Attribute name="ОбщееВремяВыполнения" id="45">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Общее время выполнения</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:decimal</v8:Type>
+				<v8:NumberQualifiers>
+					<v8:Digits>15</v8:Digits>
+					<v8:FractionDigits>0</v8:FractionDigits>
+					<v8:AllowedSign>Any</v8:AllowedSign>
+				</v8:NumberQualifiers>
+			</Type>
 		</Attribute>
 	</Attributes>
 	<Commands>
