@@ -1385,6 +1385,11 @@
 										<CommandName>Form.Command.ВывестиВТабДок</CommandName>
 										<ExtendedTooltip name="ТаблицыВывестиВТабДокРасширеннаяПодсказка" id="467"/>
 									</Button>
+									<Button name="ТаблицыВключитьЗамеры" id="480">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ВключитьЗамеры</CommandName>
+										<ExtendedTooltip name="ТаблицыВключитьЗамерыРасширеннаяПодсказка" id="481"/>
+									</Button>
 								</ChildItems>
 							</AutoCommandBar>
 							<ExtendedTooltip name="ТаблицыРасширеннаяПодсказка" id="318"/>
@@ -1442,6 +1447,13 @@
 									<EditMode>EnterOnInput</EditMode>
 									<ContextMenu name="ТаблицыКоличествоКонтекстноеМеню" id="410"/>
 									<ExtendedTooltip name="ТаблицыКоличествоРасширеннаяПодсказка" id="411"/>
+								</InputField>
+								<InputField name="ТаблицыЗамер" id="477">
+									<DataPath>Таблицы.Замер</DataPath>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="ТаблицыЗамерКонтекстноеМеню" id="478"/>
+									<ExtendedTooltip name="ТаблицыЗамерРасширеннаяПодсказка" id="479"/>
 								</InputField>
 							</ChildItems>
 						</Table>
@@ -2172,6 +2184,22 @@
 						</v8:NumberQualifiers>
 					</Type>
 				</Column>
+				<Column name="Замер" id="4">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Замер</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:decimal</v8:Type>
+						<v8:NumberQualifiers>
+							<v8:Digits>13</v8:Digits>
+							<v8:FractionDigits>3</v8:FractionDigits>
+							<v8:AllowedSign>Any</v8:AllowedSign>
+						</v8:NumberQualifiers>
+					</Type>
+				</Column>
 			</Columns>
 		</Attribute>
 		<Attribute name="АдресХраненияРезультата" id="9">
@@ -2767,6 +2795,20 @@
 			<SavedData>true</SavedData>
 			<Save>
 				<Field>КоличествоСохраняемыхЭлементовСписковЗначений</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ВключеныЗамерыЗапросов" id="44">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Включены замеры запросов</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+			<Save>
+				<Field>ВключеныЗамерыЗапросов</Field>
 			</Save>
 		</Attribute>
 	</Attributes>
@@ -3594,6 +3636,25 @@
 				<xr:LoadTransparent>true</xr:LoadTransparent>
 			</Picture>
 			<Action>СохранитьВCSV</Action>
+		</Command>
+		<Command name="ВключитьЗамеры" id="39">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Включить замеры</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Включить замеры</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Picture>
+				<xr:Ref>StdPicture.SetTime</xr:Ref>
+				<xr:LoadTransparent>true</xr:LoadTransparent>
+			</Picture>
+			<Action>ВключитьЗамеры</Action>
 		</Command>
 	</Commands>
 </Form>
