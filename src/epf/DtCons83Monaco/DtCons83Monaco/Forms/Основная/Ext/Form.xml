@@ -1414,6 +1414,7 @@
 							</SearchControlAddition>
 							<Events>
 								<Event name="Selection">ТаблицыВыбор</Event>
+								<Event name="OnActivateRow">ТаблицыПриАктивизацииСтроки</Event>
 							</Events>
 							<ChildItems>
 								<InputField name="ТаблицыИмяТаблицы" id="328">
