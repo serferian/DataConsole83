@@ -536,6 +536,14 @@
 									<ContextMenu name="АлгоритмыКодЗапросаКонтекстноеМеню" id="231"/>
 									<ExtendedTooltip name="АлгоритмыКодЗапросаРасширеннаяПодсказка" id="232"/>
 								</InputField>
+								<InputField name="АлгоритмыКодЗапросаПередВыполнениемЗапроса" id="487">
+									<DataPath>Алгоритмы.КодЗапросаПередВыполнениемЗапроса</DataPath>
+									<Visible>false</Visible>
+									<EditMode>EnterOnInput</EditMode>
+									<ExtendedEditMultipleValues>true</ExtendedEditMultipleValues>
+									<ContextMenu name="АлгоритмыКодЗапросаПередВыполнениемЗапросаКонтекстноеМеню" id="488"/>
+									<ExtendedTooltip name="АлгоритмыКодЗапросаПередВыполнениемЗапросаРасширеннаяПодсказка" id="489"/>
+								</InputField>
 								<InputField name="АлгоритмыКодКлиента1С" id="233">
 									<DataPath>Алгоритмы.КодКлиента1С</DataPath>
 									<UserVisible>
@@ -667,6 +675,28 @@
 													</Title>
 													<ExtendedTooltip name="ПолучитьКодДляВставкиРасширеннаяПодсказка" id="355"/>
 												</Button>
+											</ChildItems>
+										</UsualGroup>
+										<UsualGroup name="Группа8" id="482">
+											<Group>AlwaysHorizontal</Group>
+											<Representation>None</Representation>
+											<ShowTitle>false</ShowTitle>
+											<ExtendedTooltip name="Группа8РасширеннаяПодсказка" id="483"/>
+											<ChildItems>
+												<LabelDecoration name="Декорация1" id="484">
+													<Title formatted="false">
+														<v8:item>
+															<v8:lang>ru</v8:lang>
+															<v8:content>Перед выполнением запроса</v8:content>
+														</v8:item>
+													</Title>
+													<Hyperlink>true</Hyperlink>
+													<ContextMenu name="Декорация1КонтекстноеМеню" id="485"/>
+													<ExtendedTooltip name="Декорация1РасширеннаяПодсказка" id="486"/>
+													<Events>
+														<Event name="Click">Декорация1Нажатие</Event>
+													</Events>
+												</LabelDecoration>
 											</ChildItems>
 										</UsualGroup>
 										<TextDocumentField name="ПолеКодЗапроса" id="55">
@@ -1369,7 +1399,6 @@
 								<ExcludedCommand>Find</ExcludedCommand>
 								<ExcludedCommand>MoveDown</ExcludedCommand>
 								<ExcludedCommand>MoveUp</ExcludedCommand>
-								<ExcludedCommand>OutputList</ExcludedCommand>
 								<ExcludedCommand>SelectAll</ExcludedCommand>
 								<ExcludedCommand>ShowMultipleSelection</ExcludedCommand>
 								<ExcludedCommand>ShowRowRearrangement</ExcludedCommand>
@@ -1821,7 +1850,7 @@
 			<Type>
 				<v8:Type>xs:string</v8:Type>
 				<v8:StringQualifiers>
-					<v8:Length>25</v8:Length>
+					<v8:Length>50</v8:Length>
 					<v8:AllowedLength>Variable</v8:AllowedLength>
 				</v8:StringQualifiers>
 			</Type>
@@ -2099,6 +2128,21 @@
 						<v8:item>
 							<v8:lang>en</v8:lang>
 							<v8:content>Server 1C code</v8:content>
+						</v8:item>
+					</Title>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>0</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+				</Column>
+				<Column name="КодЗапросаПередВыполнениемЗапроса" id="11">
+					<Title>
+						<v8:item>
+							<v8:lang>ru</v8:lang>
+							<v8:content>Код запроса перед выполнением запроса</v8:content>
 						</v8:item>
 					</Title>
 					<Type>
