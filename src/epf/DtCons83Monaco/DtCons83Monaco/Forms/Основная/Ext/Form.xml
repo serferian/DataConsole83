@@ -180,6 +180,12 @@
 				<CommandName>Form.Command.ОтображатьПробелыИТабуляции</CommandName>
 				<ExtendedTooltip name="ОтображатьПробелыИТабуляцииРасширеннаяПодсказка" id="459"/>
 			</Button>
+			<Button name="ФормаПоказатьПодсказкуПараметров" id="495">
+				<Type>CommandBarButton</Type>
+				<Check>true</Check>
+				<CommandName>Form.Command.ПоказатьПодсказкуПараметров</CommandName>
+				<ExtendedTooltip name="ФормаПоказатьПодсказкуПараметровРасширеннаяПодсказка" id="496"/>
+			</Button>
 		</ChildItems>
 	</AutoCommandBar>
 	<Events>
@@ -1157,6 +1163,36 @@
 								</Page>
 							</ChildItems>
 						</Pages>
+						<UsualGroup name="ГруппаПодсказки" id="490">
+							<Title>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа подсказки</v8:content>
+								</v8:item>
+							</Title>
+							<ToolTip>
+								<v8:item>
+									<v8:lang>ru</v8:lang>
+									<v8:content>Группа подсказки</v8:content>
+								</v8:item>
+							</ToolTip>
+							<Representation>None</Representation>
+							<ShowTitle>false</ShowTitle>
+							<ExtendedTooltip name="ГруппаПодсказкиРасширеннаяПодсказка" id="491"/>
+							<ChildItems>
+								<LabelField name="ПодсказкаПоПараметрам" id="492">
+									<DataPath>ПодсказкаПоПараметрам</DataPath>
+									<ReadOnly>true</ReadOnly>
+									<TitleLocation>None</TitleLocation>
+									<AutoMaxWidth>false</AutoMaxWidth>
+									<Height>2</Height>
+									<AutoMaxHeight>false</AutoMaxHeight>
+									<MaxHeight>2</MaxHeight>
+									<ContextMenu name="ПодсказкаПоПараметрамКонтекстноеМеню" id="493"/>
+									<ExtendedTooltip name="ПодсказкаПоПараметрамРасширеннаяПодсказка" id="494"/>
+								</LabelField>
+							</ChildItems>
+						</UsualGroup>
 						<Pages name="СтраницыHTMLПоля" id="432">
 							<Title>
 								<v8:item>
@@ -2842,6 +2878,11 @@
 				</v8:NumberQualifiers>
 			</Type>
 		</Attribute>
+		<Attribute name="ПодсказкаПоПараметрам" id="4">
+			<Type>
+				<v8:Type>v8ui:FormattedString</v8:Type>
+			</Type>
+		</Attribute>
 	</Attributes>
 	<Commands>
 		<Command name="ФайлСохранить" id="5">
@@ -3686,6 +3727,21 @@
 				<xr:LoadTransparent>true</xr:LoadTransparent>
 			</Picture>
 			<Action>ВключитьЗамеры</Action>
+		</Command>
+		<Command name="ПоказатьПодсказкуПараметров" id="40">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать подсказку параметров</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать подсказку параметров</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПоказатьПодсказкуПараметров</Action>
 		</Command>
 	</Commands>
 </Form>
