@@ -1189,7 +1189,7 @@
 									<ReadOnly>true</ReadOnly>
 									<TitleLocation>None</TitleLocation>
 									<AutoMaxWidth>false</AutoMaxWidth>
-									<Height>2</Height>
+									<Height>3</Height>
 									<AutoMaxHeight>false</AutoMaxHeight>
 									<MaxHeight>2</MaxHeight>
 									<ContextMenu name="ПодсказкаПоПараметрамКонтекстноеМеню" id="493"/>
@@ -1326,6 +1326,11 @@
 										<CommandSource>Item.Значения</CommandSource>
 										<ExtendedTooltip name="ЗначенияМенюКонтекстРасширеннаяПодсказка" id="264"/>
 									</ButtonGroup>
+									<Button name="ЗначенияКонтекстноеМенюПоказатьУИД" id="499">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ПоказатьУИД</CommandName>
+										<ExtendedTooltip name="ЗначенияКонтекстноеМенюПоказатьУИДРасширеннаяПодсказка" id="500"/>
+									</Button>
 								</ChildItems>
 							</ContextMenu>
 							<AutoCommandBar name="ЗначенияКоманднаяПанель" id="241">
@@ -1669,6 +1674,11 @@
 										<Type>CommandBarButton</Type>
 										<CommandName>Form.Command.ВыгрузкаОчистить</CommandName>
 										<ExtendedTooltip name="ВыгрузкаМенюОчиститьРасширеннаяПодсказка" id="164"/>
+									</Button>
+									<Button name="ВыгрузкаКонтекстноеМенюЗагрузитьКолонкуВПараметр" id="501">
+										<Type>CommandBarButton</Type>
+										<CommandName>Form.Command.ЗагрузитьКолонкуВПараметр</CommandName>
+										<ExtendedTooltip name="ВыгрузкаКонтекстноеМенюЗагрузитьКолонкуВПараметрРасширеннаяПодсказка" id="502"/>
 									</Button>
 								</ChildItems>
 							</ButtonGroup>
@@ -3761,6 +3771,36 @@
 				</v8:item>
 			</ToolTip>
 			<Action>ПримерКодаПолученияДанныхИзХранилища</Action>
+		</Command>
+		<Command name="ПоказатьУИД" id="42">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать УИД (скопировать в буфер обмена)</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Показать УИД</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ПоказатьУИД</Action>
+		</Command>
+		<Command name="ЗагрузитьКолонкуВПараметр" id="43">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Загрузить колонку в параметр</v8:content>
+				</v8:item>
+			</Title>
+			<ToolTip>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Загрузить колонку в параметр</v8:content>
+				</v8:item>
+			</ToolTip>
+			<Action>ЗагрузитьКолонкуВПараметр</Action>
 		</Command>
 	</Commands>
 </Form>
