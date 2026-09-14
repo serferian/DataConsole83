@@ -54,17 +54,31 @@
       aria-orientation="vertical" aria-valuemin="210" aria-valuemax="520" aria-valuenow="260" tabindex="0"></div>
 
     <main id="dataconsole-editor-shell" class="dc-editor-shell">
-      <div id="dataconsole-mode-bar" class="dc-mode-bar" role="tablist" aria-label="Режимы алгоритма" hidden>
-        <button class="dc-mode-tab dc-kind-query" type="button" role="tab"
-          data-document-kind="query" aria-selected="false">Запрос</button>
-        <button class="dc-mode-tab dc-kind-before" type="button" role="tab"
-          data-document-kind="before-query" aria-selected="false">До запроса</button>
-        <button class="dc-mode-tab dc-kind-client" type="button" role="tab"
-          data-document-kind="client" aria-selected="false">Клиент</button>
-        <button class="dc-mode-tab dc-kind-server" type="button" role="tab"
-          data-document-kind="server" aria-selected="false">Сервер</button>
-        <button class="dc-mode-tab dc-kind-background" type="button" role="tab"
-          data-document-kind="background" aria-selected="false">Фон</button>
+      <div id="dataconsole-mode-bar" class="dc-mode-bar">
+        <div id="dataconsole-mode-tabs" class="dc-mode-tabs" role="tablist" aria-label="Режимы алгоритма" hidden>
+          <button class="dc-mode-tab dc-kind-query" type="button" role="tab"
+            data-document-kind="query" aria-selected="false">Запрос</button>
+          <button class="dc-mode-tab dc-kind-before" type="button" role="tab"
+            data-document-kind="before-query" aria-selected="false">До запроса</button>
+          <button class="dc-mode-tab dc-kind-client" type="button" role="tab"
+            data-document-kind="client" aria-selected="false">Клиент</button>
+          <button class="dc-mode-tab dc-kind-server" type="button" role="tab"
+            data-document-kind="server" aria-selected="false">Сервер</button>
+          <button class="dc-mode-tab dc-kind-background" type="button" role="tab"
+            data-document-kind="background" aria-selected="false">Фон</button>
+        </div>
+        <div class="dc-layout-controls" role="toolbar" aria-label="Расположение панелей">
+          <button id="dataconsole-toggle-primary-sidebar" class="dc-layout-button" type="button"
+            aria-label="Переключить основную боковую панель" aria-pressed="true"
+            title="Переключить основную боковую панель">
+            <span class="dc-layout-glyph dc-layout-primary" aria-hidden="true"></span>
+          </button>
+          <button id="dataconsole-toggle-secondary-sidebar" class="dc-layout-button" type="button"
+            aria-label="Переключить дополнительную боковую панель" aria-pressed="true"
+            title="Переключить дополнительную боковую панель">
+            <span class="dc-layout-glyph dc-layout-secondary" aria-hidden="true"></span>
+          </button>
+        </div>
       </div>
       <div id="dataconsole-action-bar" class="dc-action-bar" aria-label="Команды документа" hidden>
         <div id="dataconsole-actions" class="dc-actions"></div>

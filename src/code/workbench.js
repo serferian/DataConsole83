@@ -55,6 +55,7 @@
     searchQuery: "",
     searchTimer: null,
     sidebarVisible: true,
+    parametersVisible: true,
     sidebarWidth: 260,
     parametersWidth: 280
   };
@@ -81,7 +82,10 @@
     elements.editorEmpty = byId("dataconsole-editor-empty");
     elements.editorShell = byId("dataconsole-editor-shell");
     elements.modeBar = byId("dataconsole-mode-bar");
+    elements.modeTabsContainer = byId("dataconsole-mode-tabs");
     elements.modeTabs = elements.modeBar ? elements.modeBar.querySelectorAll(".dc-mode-tab") : [];
+    elements.togglePrimarySidebar = byId("dataconsole-toggle-primary-sidebar");
+    elements.toggleSecondarySidebar = byId("dataconsole-toggle-secondary-sidebar");
     elements.actionBar = byId("dataconsole-action-bar");
     elements.actions = byId("dataconsole-actions");
     elements.actionNote = byId("dataconsole-action-note");
@@ -473,7 +477,7 @@
     var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
     var algorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
     var hasAlgorithm = Boolean(algorithm);
-    elements.modeBar.hidden = !hasAlgorithm;
+    elements.modeTabsContainer.hidden = !hasAlgorithm;
     elements.editorShell.classList.toggle("dc-mode-visible", hasAlgorithm);
 
     for (var index = 0; index < elements.modeTabs.length; index += 1) {
@@ -1396,6 +1400,7 @@
       }
       state.sidebarVisible = visible;
       elements.workbench.classList.toggle("dc-sidebar-hidden", !visible);
+      elements.togglePrimarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
       window.setTimeout(function () {
         if (state.editor) {
           state.editor.layout();
@@ -1404,6 +1409,25 @@
       return { success: true, visible: visible };
     } catch (error) {
       return reportError("setSidebarVisible", error);
+    }
+  }
+
+  function setParametersVisible(visible) {
+    try {
+      if (typeof visible !== "boolean") {
+        throw new Error("setParametersVisible ожидает Булево.");
+      }
+      state.parametersVisible = visible;
+      elements.workbench.classList.toggle("dc-secondary-sidebar-hidden", !visible);
+      elements.toggleSecondarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
+      window.setTimeout(function () {
+        if (state.editor) {
+          state.editor.layout();
+        }
+      }, 0);
+      return { success: true, visible: visible };
+    } catch (error) {
+      return reportError("setParametersVisible", error);
     }
   }
 
@@ -1486,6 +1510,15 @@
         closeWorkbenchDialog();
         event.preventDefault();
       }
+    });
+  }
+
+  function initializeLayoutControls() {
+    elements.togglePrimarySidebar.addEventListener("click", function () {
+      setSidebarVisible(!state.sidebarVisible);
+    });
+    elements.toggleSecondarySidebar.addEventListener("click", function () {
+      setParametersVisible(!state.parametersVisible);
     });
   }
 
@@ -1745,6 +1778,7 @@
     elements.fillParameters.addEventListener("click", fillParametersFromUi);
     initializeSearch();
     initializeMutationControls();
+    initializeLayoutControls();
     initializeModeTabs();
     initializeSplitter();
     initializeParametersSplitter();
@@ -1761,6 +1795,7 @@
     getActiveDocument: getActiveDocument,
     getDocumentText: getDocumentText,
     setSidebarVisible: setSidebarVisible,
+    setParametersVisible: setParametersVisible,
     onEditorReady: onEditorReady,
     onEditorContentChanged: onEditorContentChanged,
     onLegacyContentSet: onLegacyContentSet,
