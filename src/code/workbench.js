@@ -857,8 +857,17 @@
       renderWhitespace: settings.renderWhitespace ? "all" : "none",
       quickSuggestions: settings.quickSuggestions
     });
+    var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+    var useQueryTheme = Boolean(activeDocument && normalizedKind(activeDocument.kind) === "query")
+      || settings.queryHighlighting;
+    var themeName = (settings.theme === "dark" ? "bsl-dark" : "bsl-white")
+      + (useQueryTheme ? "-query" : "");
     if (window.monaco && window.monaco.editor) {
-      window.monaco.editor.setTheme("bsl-" + settings.theme + (settings.queryHighlighting ? "-query" : ""));
+      if (typeof window.setTheme === "function") {
+        window.setTheme(themeName);
+      } else {
+        window.monaco.editor.setTheme(themeName);
+      }
     }
     if (settings.statusBar && typeof window.showStatusBar === "function") {
       window.showStatusBar();
@@ -1403,6 +1412,7 @@
 
     state.activeDocumentId = documentItem.id;
     state.pendingDocumentId = null;
+    applyEditorSettings(state.workspace.settings.editor);
     selectAlgorithmInTree(documentItem.algorithmId);
     if (previousDocumentId) {
       updateDocumentButtonState(previousDocumentId);
