@@ -58,6 +58,7 @@
     searchTimer: null,
     sidebarVisible: true,
     parametersVisible: true,
+    settingsVisible: false,
     sidebarWidth: 260,
     parametersWidth: 280
   };
@@ -88,6 +89,7 @@
     elements.modeTabs = elements.modeBar ? elements.modeBar.querySelectorAll(".dc-mode-tab") : [];
     elements.togglePrimarySidebar = byId("dataconsole-toggle-primary-sidebar");
     elements.toggleSecondarySidebar = byId("dataconsole-toggle-secondary-sidebar");
+    elements.toggleSettings = byId("dataconsole-toggle-settings");
     elements.actionBar = byId("dataconsole-action-bar");
     elements.actions = byId("dataconsole-actions");
     elements.actionNote = byId("dataconsole-action-note");
@@ -101,6 +103,13 @@
     elements.tablesList = byId("dataconsole-tables-list");
     elements.toggleMeasurements = byId("dataconsole-toggle-measurements");
     elements.exportTable = byId("dataconsole-export-table");
+    elements.settings = byId("dataconsole-settings");
+    elements.closeSettings = byId("dataconsole-close-settings");
+    elements.sourceDirectory = byId("dataconsole-source-directory");
+    elements.chooseSourceDirectory = byId("dataconsole-choose-source-directory");
+    elements.loadCommonModules = byId("dataconsole-load-common-modules");
+    elements.variableDisplayMode = byId("dataconsole-variable-display-mode");
+    elements.savedListLimit = byId("dataconsole-saved-list-limit");
     elements.splitter = byId("dataconsole-splitter");
     elements.dialogBackdrop = byId("dataconsole-dialog-backdrop");
     elements.dialogTitle = byId("dataconsole-dialog-title");
@@ -209,6 +218,25 @@
       name: String(rawTable.name || "Результат"),
       rowCount: isFinite(rowCount) ? rowCount : 0,
       duration: isFinite(duration) ? duration : 0
+    };
+  }
+
+  function normalizeSettings(rawSettings) {
+    var source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
+    var variableDisplayMode = Number(source.variableDisplayMode || 0);
+    var savedListLimit = Number(source.savedListLimit || 0);
+    if (variableDisplayMode < 0 || variableDisplayMode > 2 || !isFinite(variableDisplayMode)) {
+      variableDisplayMode = 0;
+    }
+    if (savedListLimit < 0 || savedListLimit > 9999 || !isFinite(savedListLimit)) {
+      savedListLimit = 0;
+    }
+    return {
+      sourceDirectory: source.sourceDirectory === undefined || source.sourceDirectory === null
+        ? ""
+        : String(source.sourceDirectory),
+      variableDisplayMode: Math.floor(variableDisplayMode),
+      savedListLimit: Math.floor(savedListLimit)
     };
   }
 
@@ -345,6 +373,7 @@
           : String(snapshot.selectedTableId),
         measurementsEnabled: Boolean(snapshot.measurementsEnabled),
         tables: normalizedTables,
+        settings: normalizeSettings(snapshot.settings),
         algorithms: normalizedRoots
       },
       algorithms: algorithms,
@@ -768,6 +797,61 @@
     });
   }
 
+  function settingsCommandPayload(action, value) {
+    return {
+      sessionId: state.workspace ? state.workspace.sessionId : "",
+      action: action,
+      value: value === undefined || value === null ? "" : value
+    };
+  }
+
+  function requestSettingsCommand(action, value) {
+    if (!state.workspace) {
+      return;
+    }
+    emitBridgeEvent("EVENT_SETTINGS_COMMAND_REQUESTED", settingsCommandPayload(action, value));
+  }
+
+  function renderSettingsPanel() {
+    var settings = state.workspace ? state.workspace.settings : normalizeSettings(null);
+    var canChange = Boolean(state.workspace);
+    elements.sourceDirectory.value = settings.sourceDirectory;
+    elements.variableDisplayMode.value = String(settings.variableDisplayMode);
+    elements.savedListLimit.value = String(settings.savedListLimit);
+    elements.sourceDirectory.disabled = !canChange;
+    elements.chooseSourceDirectory.disabled = !canChange;
+    elements.loadCommonModules.disabled = !canChange;
+    elements.variableDisplayMode.disabled = !canChange;
+    elements.savedListLimit.disabled = !canChange;
+  }
+
+  function setSettingsVisible(visible) {
+    state.settingsVisible = Boolean(visible);
+    if (state.settingsVisible && !state.parametersVisible) {
+      setParametersVisible(true);
+    }
+    elements.parameters.classList.toggle("dc-settings-visible", state.settingsVisible);
+    elements.settings.hidden = !state.settingsVisible;
+    elements.toggleSettings.setAttribute("aria-pressed", state.settingsVisible ? "true" : "false");
+    var toggleLabel = state.settingsVisible ? "Закрыть настройки" : "Открыть настройки";
+    elements.toggleSettings.setAttribute("aria-label", toggleLabel);
+    elements.toggleSettings.title = toggleLabel;
+    if (state.settingsVisible) {
+      renderSettingsPanel();
+      window.setTimeout(function () { elements.sourceDirectory.focus(); }, 0);
+    }
+    window.setTimeout(function () {
+      if (state.editor) {
+        state.editor.layout();
+      }
+    }, 0);
+  }
+
+  function toggleSettings() {
+    setSettingsVisible(state.parametersVisible ? !state.settingsVisible : true);
+    return { success: true, visible: state.settingsVisible };
+  }
+
   function fillParametersFromUi() {
     var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
     var algorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
@@ -1116,6 +1200,7 @@
       elements.editorEmpty.hidden = false;
       updateModeBar();
       renderTablesPanel();
+      renderSettingsPanel();
       return;
     }
 
@@ -1133,6 +1218,7 @@
     elements.editorEmpty.hidden = Boolean(state.activeDocumentId);
     updateModeBar();
     renderTablesPanel();
+    renderSettingsPanel();
   }
 
   function disposeObsoleteModels(nextDocuments) {
@@ -1417,6 +1503,10 @@
         operation.measurementsEnabled = Boolean(operation.measurementsEnabled);
         return;
       }
+      if (operation.op === "replaceSettings") {
+        operation.normalizedSettings = normalizeSettings(operation.settings);
+        return;
+      }
       throw new Error("Неподдерживаемая операция patch: " + String(operation.op) + ".");
     });
     return operations;
@@ -1493,12 +1583,15 @@
           state.workspace.tables = operation.normalizedTables;
           state.workspace.measurementsEnabled = operation.measurementsEnabled;
           state.selectedTableId = operation.selectedTableId || null;
+        } else if (operation.op === "replaceSettings") {
+          state.workspace.settings = operation.normalizedSettings;
         }
       });
       var parametersChanged = operations.some(function (operation) {
         return operation.op === "updateParameter" || operation.op === "replaceAlgorithmParameters";
       });
       var tablesChanged = operations.some(function (operation) { return operation.op === "replaceTables"; });
+      var settingsChanged = operations.some(function (operation) { return operation.op === "replaceSettings"; });
       if (state.searchQuery) {
         renderWorkspace();
       } else if (parametersChanged) {
@@ -1508,6 +1601,9 @@
       }
       if (tablesChanged) {
         renderTablesPanel();
+      }
+      if (settingsChanged) {
+        renderSettingsPanel();
       }
       return { success: true, applied: operations.length };
     } catch (error) {
@@ -1676,6 +1772,9 @@
     elements.toggleSecondarySidebar.addEventListener("click", function () {
       setParametersVisible(!state.parametersVisible);
     });
+    elements.toggleSettings.addEventListener("click", function () {
+      toggleSettings();
+    });
   }
 
   function initializeTableControls() {
@@ -1686,6 +1785,44 @@
       if (state.selectedTableId) {
         requestTableCommand("export-table", state.selectedTableId);
       }
+    });
+  }
+
+  function initializeSettingsControls() {
+    function commitSourceDirectory() {
+      var value = String(elements.sourceDirectory.value || "").replace(/^\s+|\s+$/g, "");
+      var current = state.workspace ? state.workspace.settings.sourceDirectory : "";
+      if (value !== current) {
+        requestSettingsCommand("set-source-directory", value);
+      }
+    }
+    elements.closeSettings.addEventListener("click", function () {
+      setSettingsVisible(false);
+      elements.toggleSettings.focus();
+    });
+    elements.chooseSourceDirectory.addEventListener("click", function () {
+      requestSettingsCommand("choose-source-directory", "");
+    });
+    elements.loadCommonModules.addEventListener("click", function () {
+      requestSettingsCommand("load-common-modules", "");
+    });
+    elements.sourceDirectory.addEventListener("change", commitSourceDirectory);
+    elements.sourceDirectory.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        commitSourceDirectory();
+        event.preventDefault();
+      } else if (event.key === "Escape" || event.keyCode === 27) {
+        renderSettingsPanel();
+        event.preventDefault();
+      }
+    });
+    elements.variableDisplayMode.addEventListener("change", function () {
+      requestSettingsCommand("set-variable-display-mode", Number(elements.variableDisplayMode.value));
+    });
+    elements.savedListLimit.addEventListener("change", function () {
+      var value = Math.max(0, Math.min(9999, Math.floor(Number(elements.savedListLimit.value) || 0)));
+      elements.savedListLimit.value = String(value);
+      requestSettingsCommand("set-saved-list-limit", value);
     });
   }
 
@@ -1947,6 +2084,7 @@
     initializeMutationControls();
     initializeLayoutControls();
     initializeTableControls();
+    initializeSettingsControls();
     initializeModeTabs();
     initializeSplitter();
     initializeParametersSplitter();
@@ -1964,6 +2102,8 @@
     getDocumentText: getDocumentText,
     setSidebarVisible: setSidebarVisible,
     setParametersVisible: setParametersVisible,
+    setSettingsVisible: setSettingsVisible,
+    toggleSettings: toggleSettings,
     onEditorReady: onEditorReady,
     onEditorContentChanged: onEditorContentChanged,
     onLegacyContentSet: onLegacyContentSet,

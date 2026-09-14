@@ -78,6 +78,10 @@
             title="Переключить дополнительную боковую панель">
             <span class="dc-layout-glyph dc-layout-secondary" aria-hidden="true"></span>
           </button>
+          <button id="dataconsole-toggle-settings" class="dc-layout-button" type="button"
+            aria-label="Открыть настройки" aria-pressed="false" title="Открыть настройки">
+            <span class="dc-settings-glyph" aria-hidden="true">⚙</span>
+          </button>
         </div>
       </div>
       <div id="dataconsole-action-bar" class="dc-action-bar" aria-label="Команды документа" hidden>
@@ -141,6 +145,44 @@
             </div>
             <div id="dataconsole-tables-list" class="dc-tables-list">
               <div class="dc-tables-empty">Выполните запрос</div>
+            </div>
+          </section>
+          <section id="dataconsole-settings" class="dc-settings-section" aria-label="Настройки" hidden>
+            <div class="dc-settings-header">
+              <div class="dc-settings-title">НАСТРОЙКИ</div>
+              <button id="dataconsole-close-settings" class="dc-icon-button" type="button"
+                aria-label="Закрыть настройки" title="Закрыть настройки">×</button>
+            </div>
+            <div class="dc-settings-content">
+              <label class="dc-settings-field" for="dataconsole-source-directory">
+                <span>Каталог исходного кода конфигурации</span>
+              </label>
+              <div class="dc-settings-path-row">
+                <input id="dataconsole-source-directory" class="dc-settings-input" type="text"
+                  autocomplete="off" spellcheck="false">
+                <button id="dataconsole-choose-source-directory" class="dc-settings-choose" type="button"
+                  aria-label="Выбрать каталог" title="Выбрать каталог">…</button>
+              </div>
+              <button id="dataconsole-load-common-modules" class="dc-settings-primary" type="button">
+                Загрузить общие модули
+              </button>
+              <label class="dc-settings-field" for="dataconsole-variable-display-mode">
+                <span>Значения переменных после выполнения</span>
+                <select id="dataconsole-variable-display-mode" class="dc-settings-input">
+                  <option value="0">Не показывать</option>
+                  <option value="1">В отдельном окне</option>
+                  <option value="2">Во всплывающих подсказках</option>
+                </select>
+              </label>
+              <label class="dc-settings-field" for="dataconsole-saved-list-limit">
+                <span>Сохраняемых элементов списка значений</span>
+                <input id="dataconsole-saved-list-limit" class="dc-settings-input" type="number"
+                  min="0" max="9999" step="1" inputmode="numeric"
+                  aria-describedby="dataconsole-saved-list-limit-note">
+              </label>
+              <div id="dataconsole-saved-list-limit-note" class="dc-settings-note">
+                Ноль использует стандартный предел — 1000 элементов.
+              </div>
             </div>
           </section>
         </aside>
