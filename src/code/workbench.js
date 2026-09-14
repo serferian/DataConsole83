@@ -2,11 +2,11 @@
   "use strict";
 
   var DOCUMENT_KINDS = {
-    query: { className: "query", glyph: "Q", title: "Запрос", language: "bsl_query" },
-    beforequery: { className: "before", glyph: "B", title: "Перед запросом", language: "bsl" },
-    client: { className: "client", glyph: "C", title: "Клиент", language: "bsl" },
-    server: { className: "server", glyph: "S", title: "Сервер", language: "bsl" },
-    background: { className: "background", glyph: "F", title: "Фон", language: "bsl" }
+    query: { className: "query", glyph: "Q", title: "Запрос", tabTitle: "Запрос", language: "bsl_query", order: 0 },
+    beforequery: { className: "before", glyph: "B", title: "Перед выполнением запроса", tabTitle: "До запроса", language: "bsl", order: 1 },
+    client: { className: "client", glyph: "C", title: "Код клиента", tabTitle: "Клиент", language: "bsl", order: 2 },
+    server: { className: "server", glyph: "S", title: "Код сервера", tabTitle: "Сервер", language: "bsl", order: 3 },
+    background: { className: "background", glyph: "F", title: "Фоновый код", tabTitle: "Фон", language: "bsl", order: 4 }
   };
 
   var state = {
@@ -17,12 +17,15 @@
     viewStates: new Map(),
     documentButtons: new Map(),
     expandedAlgorithms: new Map(),
+    searchExpandedAlgorithms: new Map(),
     activeDocumentId: null,
     pendingDocumentId: null,
     editor: null,
     legacyModel: null,
     suppressContentEvents: false,
     themeBridgeInstalled: false,
+    searchQuery: "",
+    searchTimer: null,
     sidebarVisible: true,
     sidebarWidth: 260
   };
@@ -38,8 +41,14 @@
     elements.explorer = byId("dataconsole-explorer");
     elements.fileName = byId("dataconsole-file-name");
     elements.tree = byId("dataconsole-algorithm-tree");
+    elements.search = byId("dataconsole-search");
+    elements.searchClear = byId("dataconsole-search-clear");
+    elements.searchEmpty = byId("dataconsole-search-empty");
     elements.explorerEmpty = byId("dataconsole-explorer-empty");
     elements.editorEmpty = byId("dataconsole-editor-empty");
+    elements.editorShell = byId("dataconsole-editor-shell");
+    elements.modeBar = byId("dataconsole-mode-bar");
+    elements.modeTabs = elements.modeBar ? elements.modeBar.querySelectorAll(".dc-mode-tab") : [];
     elements.splitter = byId("dataconsole-splitter");
   }
 
@@ -53,8 +62,37 @@
       className: "server",
       glyph: "B",
       title: String(kind || "Код"),
-      language: "bsl"
+      tabTitle: String(kind || "Код"),
+      language: "bsl",
+      order: 99
     };
+  }
+
+  function lowercaseSearchValue(value) {
+    return String(value === undefined || value === null ? "" : value).toLowerCase();
+  }
+
+  function trimmedSearchValue(value) {
+    return lowercaseSearchValue(value).replace(/^\s+|\s+$/g, "");
+  }
+
+  function rebuildAlgorithmSearchIndex(algorithm) {
+    var values = [algorithm.name];
+    algorithm.parameters.forEach(function (parameter) {
+      values.push(parameter.name, parameter.typeName, parameter.presentation);
+    });
+    algorithm.searchIndex = lowercaseSearchValue(values.join("\n"));
+  }
+
+  function rebuildDocumentSearchIndex(documentItem) {
+    var description = kindDescription(documentItem.kind);
+    documentItem.searchIndex = lowercaseSearchValue([
+      documentItem.kind,
+      documentItem.title,
+      description.title,
+      description.tabTitle,
+      documentItem.text
+    ].join("\n"));
   }
 
   function parseJsonValue(value, methodName) {
@@ -168,6 +206,7 @@
           text: rawDocument.text === undefined || rawDocument.text === null ? "" : String(rawDocument.text),
           hasContent: rawDocument.hasContent === undefined ? Boolean(rawDocument.text) : Boolean(rawDocument.hasContent)
         };
+        rebuildDocumentSearchIndex(documentItem);
         documents.set(documentId, documentItem);
         orderedDocuments.push(documentItem);
         algorithm.documents.push(documentItem);
@@ -186,6 +225,8 @@
           editableInline: Boolean(rawParameter.editableInline)
         });
       }
+
+      rebuildAlgorithmSearchIndex(algorithm);
 
       for (index = 0; index < rawChildren.length; index += 1) {
         algorithm.children.push(visitAlgorithm(rawChildren[index], algorithmId, depth + 1));
@@ -237,48 +278,83 @@
       button.classList.remove("dc-active");
       button.removeAttribute("aria-current");
     }
-    var contentState = button.querySelector(".dc-content-state");
-    if (contentState) {
-      if (documentItem.hasContent) {
-        contentState.classList.add("dc-has-content");
-        contentState.title = "Документ содержит текст";
-      } else {
-        contentState.classList.remove("dc-has-content");
-        contentState.title = "Пустой документ";
-      }
+    if (documentItem.hasContent) {
+      button.classList.add("dc-has-content");
+    } else {
+      button.classList.remove("dc-has-content");
     }
   }
 
-  function createDocumentRail(algorithm) {
-    var rail = document.createElement("div");
-    rail.className = "dc-document-rail";
-    rail.setAttribute("role", "group");
-    rail.setAttribute("aria-label", "Документы алгоритма " + algorithm.name);
+  function orderedDocuments(documents) {
+    return documents.slice().sort(function (left, right) {
+      return kindDescription(left.kind).order - kindDescription(right.kind).order;
+    });
+  }
 
-    algorithm.documents.forEach(function (documentItem) {
+  function activateDocumentFromUi(algorithmId, documentKind) {
+    var result = activateDocumentInternal(algorithmId, documentKind, true);
+    if (result && result.errorDescription) {
+      reportError("activateDocument", new Error(result.errorDescription));
+    }
+  }
+
+  function createTreeDocumentButtons(algorithm) {
+    var group = document.createElement("div");
+    group.className = "dc-tree-document-buttons";
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-label", "Документы алгоритма " + algorithm.name);
+
+    orderedDocuments(algorithm.documents).forEach(function (documentItem) {
       var description = kindDescription(documentItem.kind);
       var button = document.createElement("button");
-      var stateIndicator;
       button.type = "button";
-      button.className = "dc-document-button dc-kind-" + description.className;
-      button.setAttribute("role", "treeitem");
+      button.className = "dc-tree-document-button dc-kind-" + description.className;
       button.setAttribute("data-document-id", documentItem.id);
-      button.title = documentItem.title || description.title;
-      appendTextElement(button, "span", "dc-document-glyph", description.glyph);
-      appendTextElement(button, "span", "dc-document-title", documentItem.title || description.title);
-      stateIndicator = appendTextElement(button, "span", "dc-content-state", "");
-      stateIndicator.setAttribute("aria-hidden", "true");
-      button.addEventListener("click", function () {
-        var result = activateDocumentInternal(algorithm.id, documentItem.kind, true);
-        if (result && result.errorDescription) {
-          reportError("activateDocument", new Error(result.errorDescription));
+      button.title = description.title;
+      button.setAttribute("aria-label", description.title);
+      button.textContent = description.glyph;
+      button.addEventListener("click", function (event) {
+        if (event && event.stopPropagation) {
+          event.stopPropagation();
         }
+        activateDocumentFromUi(algorithm.id, documentItem.kind);
       });
       state.documentButtons.set(documentItem.id, button);
-      rail.appendChild(button);
+      group.appendChild(button);
       updateDocumentButtonState(documentItem.id);
     });
-    return rail;
+    return group;
+  }
+
+  function algorithmDocumentByKind(algorithm, documentKind) {
+    var expectedKind = normalizedKind(documentKind);
+    for (var index = 0; index < algorithm.documents.length; index += 1) {
+      if (normalizedKind(algorithm.documents[index].kind) === expectedKind) {
+        return algorithm.documents[index];
+      }
+    }
+    return null;
+  }
+
+  function updateModeBar() {
+    var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+    var algorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
+    var hasAlgorithm = Boolean(algorithm);
+    elements.modeBar.hidden = !hasAlgorithm;
+    elements.editorShell.classList.toggle("dc-mode-visible", hasAlgorithm);
+
+    for (var index = 0; index < elements.modeTabs.length; index += 1) {
+      var tab = elements.modeTabs[index];
+      var kind = tab.getAttribute("data-document-kind");
+      var documentItem = algorithm ? algorithmDocumentByKind(algorithm, kind) : null;
+      var isActive = Boolean(documentItem && documentItem.id === state.activeDocumentId);
+      tab.disabled = !documentItem;
+      tab.setAttribute("aria-selected", isActive ? "true" : "false");
+      tab.tabIndex = isActive || (!activeDocument && documentItem) ? 0 : -1;
+      tab.classList.toggle("dc-active", isActive);
+      tab.setAttribute("data-algorithm-id", algorithm ? algorithm.id : "");
+      tab.title = documentItem ? kindDescription(documentItem.kind).title : "Документ недоступен";
+    }
   }
 
   function createParameters(algorithm) {
@@ -310,13 +386,55 @@
     return block;
   }
 
-  function createAlgorithmNode(algorithm, order) {
+  function collectSearchResults(roots, query) {
+    var visible = new Map();
+    var direct = new Map();
+
+    function visit(algorithm) {
+      var ownMatch = algorithm.searchIndex.indexOf(query) >= 0;
+      var childMatch = false;
+      for (var documentIndex = 0; documentIndex < algorithm.documents.length; documentIndex += 1) {
+        if (algorithm.documents[documentIndex].searchIndex.indexOf(query) >= 0) {
+          ownMatch = true;
+          break;
+        }
+      }
+      algorithm.children.forEach(function (child) {
+        if (visit(child)) {
+          childMatch = true;
+        }
+      });
+      if (ownMatch) {
+        direct.set(algorithm.id, true);
+      }
+      if (ownMatch || childMatch) {
+        visible.set(algorithm.id, true);
+        return true;
+      }
+      return false;
+    }
+
+    roots.forEach(visit);
+    return { visible: visible, direct: direct };
+  }
+
+  function createAlgorithmNode(algorithm, order, searchResults) {
     var node = document.createElement("div");
     var heading = document.createElement("div");
     var twistie = document.createElement("button");
     var body = document.createElement("div");
-    var hasBody = algorithm.documents.length || algorithm.parameters.length || algorithm.children.length;
-    var expanded = state.expandedAlgorithms.has(algorithm.id) ? state.expandedAlgorithms.get(algorithm.id) : algorithm.depth < 2;
+    var visibleChildren = searchResults
+      ? algorithm.children.filter(function (child) { return searchResults.visible.has(child.id); })
+      : algorithm.children;
+    var hasBody = algorithm.parameters.length || visibleChildren.length;
+    var expanded;
+    if (state.searchQuery) {
+      expanded = state.searchExpandedAlgorithms.has(algorithm.id)
+        ? state.searchExpandedAlgorithms.get(algorithm.id)
+        : true;
+    } else {
+      expanded = state.expandedAlgorithms.has(algorithm.id) ? state.expandedAlgorithms.get(algorithm.id) : algorithm.depth < 2;
+    }
 
     node.className = "dc-algorithm";
     node.setAttribute("role", "treeitem");
@@ -336,22 +454,22 @@
     icon.setAttribute("aria-hidden", "true");
     heading.appendChild(icon);
     appendTextElement(heading, "span", "dc-algorithm-name", algorithm.name).title = algorithm.name;
+    if (algorithm.documents.length) {
+      heading.appendChild(createTreeDocumentButtons(algorithm));
+    }
     node.appendChild(heading);
 
     body.className = "dc-algorithm-body";
     body.hidden = !expanded;
-    if (algorithm.documents.length) {
-      body.appendChild(createDocumentRail(algorithm));
-    }
     if (algorithm.parameters.length) {
       body.appendChild(createParameters(algorithm));
     }
-    if (algorithm.children.length) {
+    if (visibleChildren.length) {
       var children = document.createElement("div");
       children.className = "dc-children";
       children.setAttribute("role", "group");
-      algorithm.children.forEach(function (child, childIndex) {
-        children.appendChild(createAlgorithmNode(child, order + childIndex + 1));
+      visibleChildren.forEach(function (child, childIndex) {
+        children.appendChild(createAlgorithmNode(child, order + childIndex + 1, searchResults));
       });
       body.appendChild(children);
     }
@@ -365,7 +483,11 @@
       twistie.setAttribute("aria-expanded", nextExpanded ? "true" : "false");
       twistie.setAttribute("aria-label", (nextExpanded ? "Свернуть " : "Развернуть ") + algorithm.name);
       body.hidden = !nextExpanded;
-      state.expandedAlgorithms.set(algorithm.id, nextExpanded);
+      if (state.searchQuery) {
+        state.searchExpandedAlgorithms.set(algorithm.id, nextExpanded);
+      } else {
+        state.expandedAlgorithms.set(algorithm.id, nextExpanded);
+      }
     });
 
     return node;
@@ -383,17 +505,25 @@
     if (!state.workspace) {
       elements.fileName.textContent = "Рабочая область не открыта";
       elements.explorerEmpty.hidden = false;
+      elements.searchEmpty.hidden = true;
       elements.editorEmpty.hidden = false;
+      updateModeBar();
       return;
     }
 
     elements.fileName.textContent = state.workspace.fileName || "Без имени";
     elements.fileName.title = state.workspace.fileName || "Без имени";
-    elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0;
+    var searchResults = state.searchQuery ? collectSearchResults(state.workspace.algorithms, state.searchQuery) : null;
+    var hasSearchMatches = !searchResults || searchResults.visible.size > 0;
+    elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0 || Boolean(state.searchQuery);
+    elements.searchEmpty.hidden = !state.searchQuery || hasSearchMatches;
     state.workspace.algorithms.forEach(function (algorithm, index) {
-      elements.tree.appendChild(createAlgorithmNode(algorithm, index));
+      if (!searchResults || searchResults.visible.has(algorithm.id)) {
+        elements.tree.appendChild(createAlgorithmNode(algorithm, index, searchResults));
+      }
     });
     elements.editorEmpty.hidden = Boolean(state.activeDocumentId);
+    updateModeBar();
   }
 
   function disposeObsoleteModels(nextDocuments) {
@@ -453,14 +583,12 @@
 
   function findDocument(algorithmId, documentKind) {
     var algorithm = state.algorithms.get(String(algorithmId));
-    var expectedKind = normalizedKind(documentKind);
     if (!algorithm) {
       throw new Error("Алгоритм не найден: " + algorithmId + ".");
     }
-    for (var index = 0; index < algorithm.documents.length; index += 1) {
-      if (normalizedKind(algorithm.documents[index].kind) === expectedKind) {
-        return algorithm.documents[index];
-      }
+    var documentItem = algorithmDocumentByKind(algorithm, documentKind);
+    if (documentItem) {
+      return documentItem;
     }
     throw new Error("Документ вида " + documentKind + " не найден в алгоритме " + algorithmId + ".");
   }
@@ -510,6 +638,7 @@
       updateDocumentButtonState(previousDocumentId);
     }
     updateDocumentButtonState(documentItem.id);
+    updateModeBar();
     if (elements.editorEmpty) {
       elements.editorEmpty.hidden = true;
     }
@@ -568,6 +697,7 @@
         }
       });
       state.expandedAlgorithms = retainedExpansion;
+      state.searchExpandedAlgorithms = new Map();
       renderWorkspace();
 
       var nextDocument = previousActiveId && state.documents.has(previousActiveId)
@@ -639,6 +769,7 @@
           documentItem.hasContent = operation.hasContent === undefined
             ? documentItem.text.length > 0
             : Boolean(operation.hasContent);
+          rebuildDocumentSearchIndex(documentItem);
           var model = state.models.get(documentItem.id);
           if (model && !model.isDisposed() && model.getValue() !== documentItem.text) {
             state.suppressContentEvents = true;
@@ -657,11 +788,12 @@
               if (operation.typeName !== undefined) {
                 parameter.typeName = String(operation.typeName);
               }
+              rebuildAlgorithmSearchIndex(algorithm);
             }
           });
         }
       });
-      if (operations.some(function (operation) { return operation.op === "updateParameter"; })) {
+      if (state.searchQuery || operations.some(function (operation) { return operation.op === "updateParameter"; })) {
         renderWorkspace();
       }
       return { success: true, applied: operations.length };
@@ -719,6 +851,98 @@
       return { success: true, visible: visible };
     } catch (error) {
       return reportError("setSidebarVisible", error);
+    }
+  }
+
+  function applySearch(rawValue) {
+    var nextQuery = trimmedSearchValue(rawValue);
+    if (state.searchQuery !== nextQuery) {
+      state.searchExpandedAlgorithms = new Map();
+    }
+    state.searchQuery = nextQuery;
+    renderWorkspace();
+  }
+
+  function updateSearchClearButton() {
+    elements.searchClear.hidden = elements.search.value.length === 0;
+  }
+
+  function scheduleSearch() {
+    updateSearchClearButton();
+    if (state.searchTimer !== null) {
+      window.clearTimeout(state.searchTimer);
+    }
+    state.searchTimer = window.setTimeout(function () {
+      state.searchTimer = null;
+      applySearch(elements.search.value);
+    }, 120);
+  }
+
+  function clearSearch() {
+    if (state.searchTimer !== null) {
+      window.clearTimeout(state.searchTimer);
+      state.searchTimer = null;
+    }
+    elements.search.value = "";
+    updateSearchClearButton();
+    applySearch("");
+    elements.search.focus();
+  }
+
+  function initializeSearch() {
+    elements.search.addEventListener("input", scheduleSearch);
+    elements.search.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" || event.keyCode === 27) {
+        clearSearch();
+        event.preventDefault();
+      }
+    });
+    elements.searchClear.addEventListener("click", clearSearch);
+  }
+
+  function enabledModeTabs() {
+    var result = [];
+    for (var index = 0; index < elements.modeTabs.length; index += 1) {
+      if (!elements.modeTabs[index].disabled) {
+        result.push(elements.modeTabs[index]);
+      }
+    }
+    return result;
+  }
+
+  function activateModeTab(tab) {
+    if (tab.disabled) {
+      return;
+    }
+    activateDocumentFromUi(tab.getAttribute("data-algorithm-id"), tab.getAttribute("data-document-kind"));
+  }
+
+  function initializeModeTabs() {
+    for (var index = 0; index < elements.modeTabs.length; index += 1) {
+      elements.modeTabs[index].addEventListener("click", function (event) {
+        activateModeTab(event.currentTarget);
+      });
+      elements.modeTabs[index].addEventListener("keydown", function (event) {
+        var tabs = enabledModeTabs();
+        var currentIndex = tabs.indexOf(event.currentTarget);
+        var nextIndex = currentIndex;
+        if (event.key === "ArrowLeft" || event.keyCode === 37) {
+          nextIndex = currentIndex <= 0 ? tabs.length - 1 : currentIndex - 1;
+        } else if (event.key === "ArrowRight" || event.keyCode === 39) {
+          nextIndex = currentIndex >= tabs.length - 1 ? 0 : currentIndex + 1;
+        } else if (event.key === "Home" || event.keyCode === 36) {
+          nextIndex = 0;
+        } else if (event.key === "End" || event.keyCode === 35) {
+          nextIndex = tabs.length - 1;
+        } else {
+          return;
+        }
+        if (tabs[nextIndex]) {
+          tabs[nextIndex].focus();
+          activateModeTab(tabs[nextIndex]);
+        }
+        event.preventDefault();
+      });
     }
   }
 
@@ -830,6 +1054,7 @@
     }
     item.text = model.getValue();
     item.hasContent = item.text.length > 0;
+    rebuildDocumentSearchIndex(item);
     updateDocumentButtonState(item.id);
   }
 
@@ -863,6 +1088,8 @@
     byId("dataconsole-open-workspace").addEventListener("click", requestWorkspaceOpen);
     byId("dataconsole-empty-open").addEventListener("click", requestWorkspaceOpen);
     byId("dataconsole-collapse-all").addEventListener("click", collapseAll);
+    initializeSearch();
+    initializeModeTabs();
     initializeSplitter();
     renderWorkspace();
     if (window.editor) {

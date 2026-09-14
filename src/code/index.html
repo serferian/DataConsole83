@@ -26,7 +26,15 @@
             aria-label="Свернуть все" title="Свернуть все">⇤</button>
         </div>
       </div>
+      <div class="dc-search-row">
+        <input id="dataconsole-search" class="dc-search-input" type="text"
+          placeholder="Поиск по алгоритмам и коду" aria-label="Поиск по алгоритмам и коду"
+          autocomplete="off" spellcheck="false">
+        <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
+          aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+      </div>
       <div id="dataconsole-algorithm-tree" class="dc-tree" role="tree" aria-label="Алгоритмы"></div>
+      <div id="dataconsole-search-empty" class="dc-search-empty" hidden>Ничего не найдено</div>
       <div id="dataconsole-explorer-empty" class="dc-explorer-empty">
         <span class="dc-empty-kicker">Нет открытого файла</span>
         <span>Откройте файл алгоритмов, чтобы начать работу.</span>
@@ -38,6 +46,18 @@
       aria-orientation="vertical" aria-valuemin="210" aria-valuemax="520" aria-valuenow="260" tabindex="0"></div>
 
     <main id="dataconsole-editor-shell" class="dc-editor-shell">
+      <div id="dataconsole-mode-bar" class="dc-mode-bar" role="tablist" aria-label="Режимы алгоритма" hidden>
+        <button class="dc-mode-tab dc-kind-query" type="button" role="tab"
+          data-document-kind="query" aria-selected="false">Запрос</button>
+        <button class="dc-mode-tab dc-kind-before" type="button" role="tab"
+          data-document-kind="before-query" aria-selected="false">До запроса</button>
+        <button class="dc-mode-tab dc-kind-client" type="button" role="tab"
+          data-document-kind="client" aria-selected="false">Клиент</button>
+        <button class="dc-mode-tab dc-kind-server" type="button" role="tab"
+          data-document-kind="server" aria-selected="false">Сервер</button>
+        <button class="dc-mode-tab dc-kind-background" type="button" role="tab"
+          data-document-kind="background" aria-selected="false">Фон</button>
+      </div>
       <div id="container"></div>
       <div id="dataconsole-editor-empty" class="dc-editor-empty" aria-live="polite">
         <div class="dc-editor-empty-mark" aria-hidden="true">DC</div>
