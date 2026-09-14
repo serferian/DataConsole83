@@ -39,10 +39,12 @@
     documentButtons: new Map(),
     algorithmNodes: new Map(),
     parameterRows: new Map(),
+    tableRows: new Map(),
     expandedAlgorithms: new Map(),
     searchExpandedAlgorithms: new Map(),
     selectedAlgorithmId: null,
     selectedParameterId: null,
+    selectedTableId: null,
     activeDocumentId: null,
     pendingDocumentId: null,
     editor: null,
@@ -96,6 +98,9 @@
     elements.fillParameters = byId("dataconsole-fill-parameters");
     elements.addParameter = byId("dataconsole-add-parameter");
     elements.deleteParameter = byId("dataconsole-delete-parameter");
+    elements.tablesList = byId("dataconsole-tables-list");
+    elements.toggleMeasurements = byId("dataconsole-toggle-measurements");
+    elements.exportTable = byId("dataconsole-export-table");
     elements.splitter = byId("dataconsole-splitter");
     elements.dialogBackdrop = byId("dataconsole-dialog-backdrop");
     elements.dialogTitle = byId("dataconsole-dialog-title");
@@ -190,6 +195,20 @@
       typeName: rawParameter.typeName === undefined ? "" : String(rawParameter.typeName),
       presentation: rawParameter.presentation === undefined ? "" : String(rawParameter.presentation),
       editableInline: Boolean(rawParameter.editableInline)
+    };
+  }
+
+  function normalizeTable(rawTable, fieldName) {
+    if (!rawTable || typeof rawTable !== "object") {
+      throw new Error("Элемент " + fieldName + " должен быть объектом.");
+    }
+    var duration = Number(rawTable.duration || 0);
+    var rowCount = Number(rawTable.rowCount || 0);
+    return {
+      id: requiredIdentity(rawTable.id, fieldName + ".id"),
+      name: String(rawTable.name || "Результат"),
+      rowCount: isFinite(rowCount) ? rowCount : 0,
+      duration: isFinite(duration) ? duration : 0
     };
   }
 
@@ -298,8 +317,19 @@
 
     var roots = asArray(snapshot.algorithms, "workspace.algorithms");
     var normalizedRoots = [];
+    var rawTables = asArray(snapshot.tables, "workspace.tables");
+    var normalizedTables = [];
+    var tableIds = new Map();
     for (var index = 0; index < roots.length; index += 1) {
       normalizedRoots.push(visitAlgorithm(roots[index], null, 0));
+    }
+    for (var tableIndex = 0; tableIndex < rawTables.length; tableIndex += 1) {
+      var table = normalizeTable(rawTables[tableIndex], "workspace.tables");
+      if (tableIds.has(table.id)) {
+        throw new Error("Повторяется идентификатор таблицы: " + table.id + ".");
+      }
+      tableIds.set(table.id, true);
+      normalizedTables.push(table);
     }
 
     return {
@@ -310,6 +340,11 @@
         selectedAlgorithmId: snapshot.selectedAlgorithmId === undefined || snapshot.selectedAlgorithmId === null
           ? ""
           : String(snapshot.selectedAlgorithmId),
+        selectedTableId: snapshot.selectedTableId === undefined || snapshot.selectedTableId === null
+          ? ""
+          : String(snapshot.selectedTableId),
+        measurementsEnabled: Boolean(snapshot.measurementsEnabled),
+        tables: normalizedTables,
         algorithms: normalizedRoots
       },
       algorithms: algorithms,
@@ -638,6 +673,99 @@
     var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
     var algorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
     updateMutationButtonStates(algorithm);
+  }
+
+  function tableCommandPayload(action, tableId) {
+    return {
+      sessionId: state.workspace ? state.workspace.sessionId : "",
+      action: action,
+      tableId: tableId || ""
+    };
+  }
+
+  function requestTableCommand(action, tableId) {
+    if (!state.workspace || !state.workspace.canExecute) {
+      return;
+    }
+    emitBridgeEvent("EVENT_TABLE_COMMAND_REQUESTED", tableCommandPayload(action, tableId));
+  }
+
+  function selectTableFromUi(table) {
+    var previousId = state.selectedTableId;
+    state.selectedTableId = table.id;
+    if (previousId && state.tableRows.has(previousId)) {
+      state.tableRows.get(previousId).classList.remove("dc-selected");
+      state.tableRows.get(previousId).setAttribute("aria-pressed", "false");
+    }
+    if (state.tableRows.has(table.id)) {
+      state.tableRows.get(table.id).classList.add("dc-selected");
+      state.tableRows.get(table.id).setAttribute("aria-pressed", "true");
+    }
+    elements.exportTable.disabled = false;
+    requestTableCommand("select-table", table.id);
+  }
+
+  function durationClass(duration, totalDuration) {
+    if (!totalDuration || duration < totalDuration * 0.1) {
+      return "dc-duration-fast";
+    }
+    if (duration < totalDuration * 0.4) {
+      return "dc-duration-medium";
+    }
+    return "dc-duration-slow";
+  }
+
+  function durationPresentation(duration) {
+    return Number(duration || 0).toFixed(3).replace(/0+$/, "").replace(/\.$/, "").replace(".", ",");
+  }
+
+  function renderTablesPanel() {
+    state.tableRows = new Map();
+    while (elements.tablesList.firstChild) {
+      elements.tablesList.removeChild(elements.tablesList.firstChild);
+    }
+    var tables = state.workspace ? state.workspace.tables : [];
+    var canExecute = Boolean(state.workspace && state.workspace.canExecute);
+    var selectedExists = tables.some(function (table) { return table.id === state.selectedTableId; });
+    if (!selectedExists) {
+      state.selectedTableId = null;
+    }
+    elements.toggleMeasurements.disabled = !canExecute;
+    elements.toggleMeasurements.setAttribute("aria-pressed",
+      state.workspace && state.workspace.measurementsEnabled ? "true" : "false");
+    elements.exportTable.disabled = !canExecute || !state.selectedTableId;
+    if (!tables.length) {
+      appendTextElement(elements.tablesList, "div", "dc-tables-empty", "Выполните запрос");
+      return;
+    }
+    var totalDuration = tables.reduce(function (sum, table) { return sum + table.duration; }, 0);
+    tables.forEach(function (table) {
+      var isSelected = table.id === state.selectedTableId;
+      var row = document.createElement("div");
+      row.className = "dc-table-row" + (isSelected ? " dc-selected" : "");
+      row.tabIndex = 0;
+      row.setAttribute("role", "button");
+      row.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      row.setAttribute("aria-label", table.name + ", строк: " + table.rowCount);
+      var name = appendTextElement(row, "span", "dc-table-name", table.name);
+      name.title = table.name;
+      appendTextElement(row, "span", "dc-table-count", String(table.rowCount));
+      var duration = appendTextElement(row, "span", "dc-table-duration", state.workspace.measurementsEnabled
+        ? durationPresentation(table.duration) : "—");
+      if (state.workspace.measurementsEnabled) {
+        duration.classList.add(durationClass(table.duration, totalDuration));
+        duration.title = durationPresentation(table.duration) + " с";
+      }
+      row.addEventListener("click", function () { selectTableFromUi(table); });
+      row.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+          selectTableFromUi(table);
+          event.preventDefault();
+        }
+      });
+      state.tableRows.set(table.id, row);
+      elements.tablesList.appendChild(row);
+    });
   }
 
   function fillParametersFromUi() {
@@ -987,6 +1115,7 @@
       elements.searchEmpty.hidden = true;
       elements.editorEmpty.hidden = false;
       updateModeBar();
+      renderTablesPanel();
       return;
     }
 
@@ -1003,6 +1132,7 @@
     });
     elements.editorEmpty.hidden = Boolean(state.activeDocumentId);
     updateModeBar();
+    renderTablesPanel();
   }
 
   function disposeObsoleteModels(nextDocuments) {
@@ -1156,6 +1286,7 @@
       state.activeDocumentId = null;
       state.selectedAlgorithmId = null;
       state.selectedParameterId = null;
+      state.selectedTableId = state.workspace.selectedTableId || null;
 
       state.suppressContentEvents = true;
       try {
@@ -1269,6 +1400,23 @@
         }
         return;
       }
+      if (operation.op === "replaceTables") {
+        var rawTables = asArray(operation.tables, "operation.tables");
+        var tableIds = new Map();
+        operation.normalizedTables = rawTables.map(function (rawTable) {
+          var table = normalizeTable(rawTable, "operation.tables");
+          if (tableIds.has(table.id)) {
+            throw new Error("Повторяется идентификатор таблицы: " + table.id + ".");
+          }
+          tableIds.set(table.id, true);
+          return table;
+        });
+        operation.selectedTableId = operation.selectedTableId === undefined || operation.selectedTableId === null
+          ? ""
+          : String(operation.selectedTableId);
+        operation.measurementsEnabled = Boolean(operation.measurementsEnabled);
+        return;
+      }
       throw new Error("Неподдерживаемая операция patch: " + String(operation.op) + ".");
     });
     return operations;
@@ -1341,17 +1489,25 @@
             elements.parametersAlgorithm.textContent = renamedAlgorithm.name;
             elements.parametersAlgorithm.title = renamedAlgorithm.name;
           }
+        } else if (operation.op === "replaceTables") {
+          state.workspace.tables = operation.normalizedTables;
+          state.workspace.measurementsEnabled = operation.measurementsEnabled;
+          state.selectedTableId = operation.selectedTableId || null;
         }
       });
       var parametersChanged = operations.some(function (operation) {
         return operation.op === "updateParameter" || operation.op === "replaceAlgorithmParameters";
       });
+      var tablesChanged = operations.some(function (operation) { return operation.op === "replaceTables"; });
       if (state.searchQuery) {
         renderWorkspace();
       } else if (parametersChanged) {
         var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
         var activeAlgorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
         renderParametersPanel(activeAlgorithm, activeDocument);
+      }
+      if (tablesChanged) {
+        renderTablesPanel();
       }
       return { success: true, applied: operations.length };
     } catch (error) {
@@ -1519,6 +1675,17 @@
     });
     elements.toggleSecondarySidebar.addEventListener("click", function () {
       setParametersVisible(!state.parametersVisible);
+    });
+  }
+
+  function initializeTableControls() {
+    elements.toggleMeasurements.addEventListener("click", function () {
+      requestTableCommand("toggle-measurements", "");
+    });
+    elements.exportTable.addEventListener("click", function () {
+      if (state.selectedTableId) {
+        requestTableCommand("export-table", state.selectedTableId);
+      }
     });
   }
 
@@ -1779,6 +1946,7 @@
     initializeSearch();
     initializeMutationControls();
     initializeLayoutControls();
+    initializeTableControls();
     initializeModeTabs();
     initializeSplitter();
     initializeParametersSplitter();

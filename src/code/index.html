@@ -106,23 +106,43 @@
           aria-label="Изменить ширину панели параметров" aria-orientation="vertical"
           aria-valuemin="220" aria-valuemax="420" aria-valuenow="280" tabindex="0"></div>
         <aside id="dataconsole-parameters" class="dc-parameters-pane" aria-label="Параметры алгоритма">
-          <div class="dc-parameters-header">
-            <div class="dc-parameters-heading">
-              <div class="dc-parameters-title">ПАРАМЕТРЫ</div>
-              <div id="dataconsole-parameters-algorithm" class="dc-parameters-algorithm">Выберите алгоритм</div>
+          <section class="dc-secondary-section dc-parameters-section" aria-label="Параметры алгоритма">
+            <div class="dc-parameters-header">
+              <div class="dc-parameters-heading">
+                <div class="dc-parameters-title">ПАРАМЕТРЫ</div>
+                <div id="dataconsole-parameters-algorithm" class="dc-parameters-algorithm">Выберите алгоритм</div>
+              </div>
+              <div class="dc-parameters-actions">
+                <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
+                  aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
+                <button id="dataconsole-add-parameter" class="dc-icon-button" type="button"
+                  aria-label="Добавить параметр" title="Добавить параметр">+</button>
+                <button id="dataconsole-delete-parameter" class="dc-icon-button" type="button"
+                  aria-label="Удалить параметр" title="Удалить выбранный параметр">−</button>
+              </div>
             </div>
-            <div class="dc-parameters-actions">
-              <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
-                aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
-              <button id="dataconsole-add-parameter" class="dc-icon-button" type="button"
-                aria-label="Добавить параметр" title="Добавить параметр">+</button>
-              <button id="dataconsole-delete-parameter" class="dc-icon-button" type="button"
-                aria-label="Удалить параметр" title="Удалить выбранный параметр">−</button>
+            <div id="dataconsole-parameters-list" class="dc-parameters-list">
+              <div class="dc-parameters-empty">Выберите алгоритм</div>
             </div>
-          </div>
-          <div id="dataconsole-parameters-list" class="dc-parameters-list">
-            <div class="dc-parameters-empty">Выберите алгоритм</div>
-          </div>
+          </section>
+          <div class="dc-secondary-divider" aria-hidden="true"></div>
+          <section class="dc-secondary-section dc-tables-section" aria-label="Таблицы запроса">
+            <div class="dc-tables-header">
+              <div class="dc-tables-title">ТАБЛИЦЫ</div>
+              <div class="dc-tables-actions">
+                <button id="dataconsole-toggle-measurements" class="dc-secondary-action" type="button"
+                  aria-label="Включить замеры выполнения" aria-pressed="false" title="Включить замеры выполнения">Замеры</button>
+                <button id="dataconsole-export-table" class="dc-secondary-action" type="button"
+                  aria-label="Выгрузить выбранную таблицу" title="Выгрузить выбранную таблицу" disabled>CSV</button>
+              </div>
+            </div>
+            <div class="dc-table-columns" aria-hidden="true">
+              <span>Имя</span><span>Строк</span><span>Время</span>
+            </div>
+            <div id="dataconsole-tables-list" class="dc-tables-list">
+              <div class="dc-tables-empty">Выполните запрос</div>
+            </div>
+          </section>
         </aside>
       </div>
     </main>
