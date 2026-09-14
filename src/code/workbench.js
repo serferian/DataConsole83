@@ -59,7 +59,7 @@
     legacyModel: null,
     suppressContentEvents: false,
     themeBridgeInstalled: false,
-    saveCommandEditor: null,
+    globalSaveHandlerInstalled: false,
     dialogConfirm: null,
     dialogRestoreFocus: null,
     searchQuery: "",
@@ -82,6 +82,10 @@
     elements.workbench = byId("dataconsole-workbench");
     elements.explorer = byId("dataconsole-explorer");
     elements.fileName = byId("dataconsole-file-name");
+    elements.newWorkspace = byId("dataconsole-new-workspace");
+    elements.openWorkspace = byId("dataconsole-open-workspace");
+    elements.saveWorkspace = byId("dataconsole-save-workspace");
+    elements.saveWorkspaceAs = byId("dataconsole-save-workspace-as");
     elements.tree = byId("dataconsole-algorithm-tree");
     elements.addAlgorithm = byId("dataconsole-add-algorithm");
     elements.addChildAlgorithm = byId("dataconsole-add-child-algorithm");
@@ -124,6 +128,7 @@
     elements.loadCommonModules = byId("dataconsole-load-common-modules");
     elements.variableDisplayMode = byId("dataconsole-variable-display-mode");
     elements.savedListLimit = byId("dataconsole-saved-list-limit");
+    elements.autoSaveOnExecute = byId("dataconsole-auto-save-on-execute");
     elements.editorTheme = byId("dataconsole-editor-theme");
     elements.editorFontSize = byId("dataconsole-editor-font-size");
     elements.editorLineNumbers = byId("dataconsole-editor-line-numbers");
@@ -288,6 +293,7 @@
       sourceDirectory: source.sourceDirectory === undefined || source.sourceDirectory === null
         ? ""
         : String(source.sourceDirectory),
+      autoSaveOnExecute: Boolean(source.autoSaveOnExecute),
       variableDisplayMode: Math.floor(variableDisplayMode),
       savedListLimit: Math.floor(savedListLimit),
       background: {
@@ -433,6 +439,7 @@
       workspace: {
         sessionId: snapshot.sessionId === undefined ? "" : String(snapshot.sessionId),
         fileName: snapshot.fileName === undefined ? "" : String(snapshot.fileName),
+        modified: Boolean(snapshot.modified),
         canExecute: snapshot.canExecute === undefined ? true : Boolean(snapshot.canExecute),
         selectedAlgorithmId: snapshot.selectedAlgorithmId === undefined || snapshot.selectedAlgorithmId === null
           ? ""
@@ -1033,6 +1040,7 @@
     elements.sourceDirectory.value = settings.sourceDirectory;
     elements.variableDisplayMode.value = String(settings.variableDisplayMode);
     elements.savedListLimit.value = String(settings.savedListLimit);
+    elements.autoSaveOnExecute.checked = settings.autoSaveOnExecute;
     elements.editorTheme.value = editorSettings.theme;
     elements.editorFontSize.value = String(editorSettings.fontSize);
     elements.editorLineNumbers.checked = editorSettings.lineNumbers;
@@ -1047,6 +1055,7 @@
     elements.loadCommonModules.disabled = !canChange;
     elements.variableDisplayMode.disabled = !canChange;
     elements.savedListLimit.disabled = !canChange;
+    elements.autoSaveOnExecute.disabled = !canChange;
     elements.editorTheme.disabled = !canChange;
     elements.editorFontSize.disabled = !canChange;
     elements.editorLineNumbers.disabled = !canChange;
@@ -1416,6 +1425,19 @@
     return node;
   }
 
+  function renderFileState() {
+    var hasWorkspace = Boolean(state.workspace);
+    var canChange = Boolean(state.workspace && state.workspace.canExecute);
+    var displayName = hasWorkspace ? (state.workspace.fileName || "Без имени") : "Рабочая область не открыта";
+    elements.fileName.textContent = displayName;
+    elements.fileName.title = displayName;
+    elements.fileName.classList.toggle("dc-modified", Boolean(hasWorkspace && state.workspace.modified));
+    elements.newWorkspace.disabled = !canChange;
+    elements.openWorkspace.disabled = !hasWorkspace;
+    elements.saveWorkspace.disabled = !canChange;
+    elements.saveWorkspaceAs.disabled = !canChange;
+  }
+
   function renderWorkspace() {
     if (!elements.tree) {
       cacheElements();
@@ -1426,8 +1448,8 @@
       elements.tree.removeChild(elements.tree.firstChild);
     }
 
+    renderFileState();
     if (!state.workspace) {
-      elements.fileName.textContent = "Рабочая область не открыта";
       elements.explorerEmpty.hidden = false;
       elements.searchEmpty.hidden = true;
       elements.editorEmpty.hidden = false;
@@ -1437,8 +1459,6 @@
       return;
     }
 
-    elements.fileName.textContent = state.workspace.fileName || "Без имени";
-    elements.fileName.title = state.workspace.fileName || "Без имени";
     var searchResults = state.searchQuery ? collectSearchResults(state.workspace.algorithms, state.searchQuery) : null;
     var hasSearchMatches = !searchResults || searchResults.visible.size > 0;
     elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0 || Boolean(state.searchQuery);
@@ -1743,6 +1763,13 @@
         operation.normalizedSettings = normalizeSettings(operation.settings);
         return;
       }
+      if (operation.op === "replaceFileState") {
+        operation.normalizedFileName = operation.fileName === undefined || operation.fileName === null
+          ? ""
+          : String(operation.fileName);
+        operation.normalizedModified = Boolean(operation.modified);
+        return;
+      }
       if (operation.op === "replaceParameterHint") {
         var hintDocumentId = requiredIdentity(operation.documentId, "operation.documentId");
         if (!state.documents.has(hintDocumentId)) {
@@ -1833,6 +1860,9 @@
           state.selectedTableId = operation.selectedTableId || null;
         } else if (operation.op === "replaceSettings") {
           state.workspace.settings = operation.normalizedSettings;
+        } else if (operation.op === "replaceFileState") {
+          state.workspace.fileName = operation.normalizedFileName;
+          state.workspace.modified = operation.normalizedModified;
         } else if (operation.op === "replaceParameterHint") {
           state.parameterHint = {
             documentId: operation.normalizedDocumentId,
@@ -1846,6 +1876,7 @@
       });
       var tablesChanged = operations.some(function (operation) { return operation.op === "replaceTables"; });
       var settingsChanged = operations.some(function (operation) { return operation.op === "replaceSettings"; });
+      var fileStateChanged = operations.some(function (operation) { return operation.op === "replaceFileState"; });
       var parameterHintChanged = operations.some(function (operation) { return operation.op === "replaceParameterHint"; });
       if (state.searchQuery) {
         renderWorkspace();
@@ -1863,6 +1894,9 @@
         var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
         var activeAlgorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
         renderActionBar(activeAlgorithm, activeDocument);
+      }
+      if (fileStateChanged) {
+        renderFileState();
       }
       if (parameterHintChanged && !settingsChanged) {
         var hintActiveDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
@@ -2087,6 +2121,9 @@
       elements.savedListLimit.value = String(value);
       requestSettingsCommand("set-saved-list-limit", value);
     });
+    elements.autoSaveOnExecute.addEventListener("change", function () {
+      requestSettingsCommand("set-auto-save-on-execute", elements.autoSaveOnExecute.checked);
+    });
     elements.editorTheme.addEventListener("change", function () {
       requestEditorSetting("theme", elements.editorTheme.value);
     });
@@ -2172,8 +2209,48 @@
     updateRenderedAlgorithmStates();
   }
 
+  function requestWorkspaceFileAction(eventName, action, requiresWriteAccess) {
+    if (!state.workspace || (requiresWriteAccess && !state.workspace.canExecute)) {
+      return;
+    }
+    emitBridgeEvent(eventName, mutationPayload(action, {}));
+  }
+
+  function requestWorkspaceNew() {
+    requestWorkspaceFileAction("EVENT_WORKSPACE_NEW_REQUESTED", "new-workspace", true);
+  }
+
   function requestWorkspaceOpen() {
-    emitBridgeEvent("EVENT_WORKSPACE_OPEN_REQUESTED", {});
+    requestWorkspaceFileAction("EVENT_WORKSPACE_OPEN_REQUESTED", "open-workspace", false);
+  }
+
+  function requestWorkspaceSave(saveAs) {
+    requestWorkspaceFileAction(saveAs
+      ? "EVENT_WORKSPACE_SAVE_AS_REQUESTED"
+      : "EVENT_WORKSPACE_SAVE_REQUESTED", saveAs ? "save-workspace-as" : "save-workspace", true);
+  }
+
+  function initializeWorkspaceFileControls() {
+    elements.newWorkspace.addEventListener("click", requestWorkspaceNew);
+    elements.openWorkspace.addEventListener("click", requestWorkspaceOpen);
+    elements.saveWorkspace.addEventListener("click", function () { requestWorkspaceSave(false); });
+    elements.saveWorkspaceAs.addEventListener("click", function () { requestWorkspaceSave(true); });
+    byId("dataconsole-empty-open").addEventListener("click", requestWorkspaceOpen);
+    if (!state.globalSaveHandlerInstalled) {
+      document.addEventListener("keydown", function (event) {
+        var key = String(event.key || "").toLowerCase();
+        if ((event.ctrlKey || event.metaKey) && !event.altKey && (key === "s" || event.keyCode === 83)) {
+          event.preventDefault();
+          if (event.stopImmediatePropagation) {
+            event.stopImmediatePropagation();
+          } else {
+            event.stopPropagation();
+          }
+          requestWorkspaceSave(false);
+        }
+      }, true);
+      state.globalSaveHandlerInstalled = true;
+    }
   }
 
   function setSidebarWidth(width) {
@@ -2295,16 +2372,6 @@
       };
       state.themeBridgeInstalled = true;
     }
-    if (editorInstance && typeof editorInstance.addCommand === "function"
-        && window.monaco && window.monaco.KeyMod && window.monaco.KeyCode
-        && state.saveCommandEditor !== editorInstance) {
-      editorInstance.addCommand(window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.KEY_S, function () {
-        if (state.workspace && state.workspace.canExecute) {
-          emitBridgeEvent("EVENT_WORKSPACE_SAVE_REQUESTED", mutationPayload("save-workspace", {}));
-        }
-      });
-      state.saveCommandEditor = editorInstance;
-    }
     if (!state.legacyModel && editorInstance) {
       state.legacyModel = editorInstance.getModel();
     }
@@ -2340,8 +2407,10 @@
     }
     item.text = model.getValue();
     item.hasContent = item.text.length > 0;
+    state.workspace.modified = true;
     rebuildDocumentSearchIndex(item);
     updateDocumentButtonState(item.id);
+    renderFileState();
   }
 
   function getContentChangeEventParams() {
@@ -2371,8 +2440,7 @@
 
   function initialize() {
     cacheElements();
-    byId("dataconsole-open-workspace").addEventListener("click", requestWorkspaceOpen);
-    byId("dataconsole-empty-open").addEventListener("click", requestWorkspaceOpen);
+    initializeWorkspaceFileControls();
     byId("dataconsole-collapse-all").addEventListener("click", collapseAll);
     elements.fillParameters.addEventListener("click", fillParametersFromUi);
     initializeSearch();

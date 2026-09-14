@@ -20,14 +20,21 @@
           <div id="dataconsole-file-name" class="dc-file-name">Рабочая область не открыта</div>
         </div>
         <div class="dc-explorer-actions">
+          <button id="dataconsole-new-workspace" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Создать файл алгоритмов" title="Новый файл алгоритмов">◇</button>
+          <button id="dataconsole-open-workspace" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Открыть файл алгоритмов" title="Открыть файл алгоритмов">↗</button>
+          <button id="dataconsole-save-workspace" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Сохранить файл алгоритмов" title="Сохранить файл алгоритмов (Ctrl+S)">↓</button>
+          <button id="dataconsole-save-workspace-as" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Сохранить файл алгоритмов как" title="Сохранить файл алгоритмов как">⇲</button>
+          <span class="dc-explorer-action-separator" aria-hidden="true"></span>
           <button id="dataconsole-add-algorithm" class="dc-icon-button" type="button"
             aria-label="Добавить алгоритм" title="Добавить алгоритм рядом">+</button>
           <button id="dataconsole-add-child-algorithm" class="dc-icon-button" type="button"
             aria-label="Добавить вложенный алгоритм" title="Добавить вложенный алгоритм">↳</button>
           <button id="dataconsole-delete-algorithm" class="dc-icon-button" type="button"
             aria-label="Удалить алгоритм" title="Удалить выбранный алгоритм">−</button>
-          <button id="dataconsole-open-workspace" class="dc-icon-button" type="button"
-            aria-label="Открыть рабочую область" title="Открыть рабочую область">↗</button>
           <button id="dataconsole-collapse-all" class="dc-icon-button" type="button"
             aria-label="Свернуть все" title="Свернуть все">⇤</button>
         </div>
@@ -198,6 +205,10 @@
               <div id="dataconsole-saved-list-limit-note" class="dc-settings-note">
                 Ноль использует стандартный предел — 1000 элементов.
               </div>
+              <label class="dc-settings-toggle dc-settings-auto-save" for="dataconsole-auto-save-on-execute">
+                <input id="dataconsole-auto-save-on-execute" type="checkbox">
+                <span>Автоматически сохранять файл при выполнении</span>
+              </label>
               <div class="dc-settings-subtitle dc-settings-editor-subtitle">РЕДАКТОР MONACO</div>
               <label class="dc-settings-field" for="dataconsole-editor-theme">
                 <span>Тема</span>
