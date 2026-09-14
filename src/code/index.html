@@ -60,20 +60,44 @@
         <button class="dc-mode-tab dc-kind-background" type="button" role="tab"
           data-document-kind="background" aria-selected="false">Фон</button>
       </div>
-      <div id="container"></div>
-      <div id="dataconsole-editor-empty" class="dc-editor-empty" aria-live="polite">
-        <div class="dc-editor-empty-mark" aria-hidden="true">DC</div>
-        <div class="dc-editor-empty-title">DataConsole83</div>
-        <div class="dc-editor-empty-copy">Откройте рабочую область и выберите документ алгоритма.</div>
+      <div id="dataconsole-action-bar" class="dc-action-bar" aria-label="Команды документа" hidden>
+        <div id="dataconsole-actions" class="dc-actions"></div>
+        <div id="dataconsole-action-note" class="dc-action-note"></div>
       </div>
-      <div id="display">
-        <div id="display-header">
-          <div id="display-title"></div>
-          <div id="display-close"></div>
-        </div>
-        <div id="variables-display">
-          <div id="variables-tree"></div>
-        </div>
+      <div class="dc-work-area">
+        <section class="dc-editor-pane">
+          <div id="container"></div>
+          <div id="dataconsole-editor-empty" class="dc-editor-empty" aria-live="polite">
+            <div class="dc-editor-empty-mark" aria-hidden="true">DC</div>
+            <div class="dc-editor-empty-title">DataConsole83</div>
+            <div class="dc-editor-empty-copy">Откройте рабочую область и выберите документ алгоритма.</div>
+          </div>
+          <div id="display">
+            <div id="display-header">
+              <div id="display-title"></div>
+              <div id="display-close"></div>
+            </div>
+            <div id="variables-display">
+              <div id="variables-tree"></div>
+            </div>
+          </div>
+        </section>
+        <div id="dataconsole-parameters-splitter" class="dc-parameters-splitter" role="separator"
+          aria-label="Изменить ширину панели параметров" aria-orientation="vertical"
+          aria-valuemin="220" aria-valuemax="420" aria-valuenow="280" tabindex="0"></div>
+        <aside id="dataconsole-parameters" class="dc-parameters-pane" aria-label="Параметры алгоритма">
+          <div class="dc-parameters-header">
+            <div class="dc-parameters-heading">
+              <div class="dc-parameters-title">ПАРАМЕТРЫ</div>
+              <div id="dataconsole-parameters-algorithm" class="dc-parameters-algorithm">Выберите алгоритм</div>
+            </div>
+            <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
+              aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
+          </div>
+          <div id="dataconsole-parameters-list" class="dc-parameters-list">
+            <div class="dc-parameters-empty">Выберите алгоритм</div>
+          </div>
+        </aside>
       </div>
     </main>
   </div>

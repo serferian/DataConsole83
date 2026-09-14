@@ -9,6 +9,26 @@
     background: { className: "background", glyph: "F", title: "Фоновый код", tabTitle: "Фон", language: "bsl", order: 4 }
   };
   var DOCUMENT_KIND_ORDER = ["query", "before-query", "client", "server", "background"];
+  var DOCUMENT_COMMANDS = {
+    query: [
+      { action: "execute-query", label: "Выполнить", primary: true },
+      { action: "execute-query-to-cursor", label: "До курсора" },
+      { action: "execute-query-package", label: "Пакет" }
+    ],
+    beforequery: [
+      { action: "execute-query", label: "Выполнить запрос", primary: true }
+    ],
+    client: [
+      { action: "execute-client", label: "Выполнить на клиенте", primary: true }
+    ],
+    server: [
+      { action: "execute-server", label: "Выполнить на сервере", primary: true }
+    ],
+    background: [
+      { action: "execute-background", label: "Выполнить в фоне", primary: true },
+      { action: "stop-background", label: "Остановить", stop: true }
+    ]
+  };
 
   var state = {
     workspace: null,
@@ -28,7 +48,8 @@
     searchQuery: "",
     searchTimer: null,
     sidebarVisible: true,
-    sidebarWidth: 260
+    sidebarWidth: 260,
+    parametersWidth: 280
   };
 
   var elements = {};
@@ -51,6 +72,14 @@
     elements.editorShell = byId("dataconsole-editor-shell");
     elements.modeBar = byId("dataconsole-mode-bar");
     elements.modeTabs = elements.modeBar ? elements.modeBar.querySelectorAll(".dc-mode-tab") : [];
+    elements.actionBar = byId("dataconsole-action-bar");
+    elements.actions = byId("dataconsole-actions");
+    elements.actionNote = byId("dataconsole-action-note");
+    elements.parameters = byId("dataconsole-parameters");
+    elements.parametersSplitter = byId("dataconsole-parameters-splitter");
+    elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
+    elements.parametersList = byId("dataconsole-parameters-list");
+    elements.fillParameters = byId("dataconsole-fill-parameters");
     elements.splitter = byId("dataconsole-splitter");
   }
 
@@ -251,6 +280,7 @@
       workspace: {
         sessionId: snapshot.sessionId === undefined ? "" : String(snapshot.sessionId),
         fileName: snapshot.fileName === undefined ? "" : String(snapshot.fileName),
+        canExecute: snapshot.canExecute === undefined ? true : Boolean(snapshot.canExecute),
         algorithms: normalizedRoots
       },
       algorithms: algorithms,
@@ -359,35 +389,117 @@
       tab.setAttribute("data-algorithm-id", algorithm ? algorithm.id : "");
       tab.title = documentItem ? kindDescription(documentItem.kind).title : "Документ недоступен";
     }
+    renderActionBar(algorithm, activeDocument);
+    renderParametersPanel(algorithm, activeDocument);
   }
 
-  function createParameters(algorithm) {
-    var block = document.createElement("div");
-    block.className = "dc-parameters";
-    appendTextElement(block, "div", "dc-parameters-title", "Параметры");
+  function commandPayload(documentItem, action) {
+    return {
+      sessionId: state.workspace ? state.workspace.sessionId : "",
+      algorithmId: documentItem.algorithmId,
+      documentId: documentItem.id,
+      documentKind: documentItem.kind,
+      action: action
+    };
+  }
 
-    algorithm.parameters.forEach(function (parameter) {
-      var row = document.createElement(parameter.editableInline ? "button" : "div");
-      row.className = "dc-parameter";
-      if (parameter.editableInline) {
-        row.type = "button";
-        row.title = "Изменить параметр " + parameter.name;
-        row.addEventListener("click", function () {
-          emitBridgeEvent("EVENT_PARAMETER_EDIT_REQUESTED", {
-            algorithmId: algorithm.id,
-            parameterId: parameter.id,
-            parameterName: parameter.name
-          });
-        });
+  function requestCommand(documentItem, action) {
+    if (!documentItem || !state.workspace || !state.workspace.canExecute) {
+      return;
+    }
+    emitBridgeEvent("EVENT_COMMAND_REQUESTED", commandPayload(documentItem, action));
+  }
+
+  function renderActionBar(algorithm, activeDocument) {
+    while (elements.actions.firstChild) {
+      elements.actions.removeChild(elements.actions.firstChild);
+    }
+    elements.actionNote.textContent = "";
+    elements.actionBar.hidden = !activeDocument;
+    if (!activeDocument) {
+      return;
+    }
+
+    var commands = DOCUMENT_COMMANDS[normalizedKind(activeDocument.kind)] || [];
+    commands.forEach(function (command) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "dc-command-button" + (command.primary ? " dc-command-primary" : "") + (command.stop ? " dc-command-stop" : "");
+      button.disabled = !state.workspace.canExecute;
+      button.title = command.label;
+      button.setAttribute("aria-label", command.label);
+      if (command.primary) {
+        var play = document.createElement("span");
+        play.className = "dc-command-play";
+        play.setAttribute("aria-hidden", "true");
+        button.appendChild(play);
       }
-      appendTextElement(row, "span", "dc-parameter-name", parameter.name);
-      var value = appendTextElement(row, "span", "dc-parameter-value", parameter.presentation);
-      if (parameter.typeName) {
-        value.title = parameter.typeName + ": " + parameter.presentation;
+      if (command.stop) {
+        var stop = document.createElement("span");
+        stop.className = "dc-command-stop-mark";
+        stop.setAttribute("aria-hidden", "true");
+        button.appendChild(stop);
       }
-      block.appendChild(row);
+      appendTextElement(button, "span", "dc-command-label", command.label);
+      button.addEventListener("click", function () {
+        requestCommand(activeDocument, command.action);
+      });
+      elements.actions.appendChild(button);
     });
-    return block;
+
+    if (normalizedKind(activeDocument.kind) === "beforequery") {
+      elements.actionNote.textContent = "Код выполнится перед запросом";
+    }
+  }
+
+  function renderParametersPanel(algorithm, activeDocument) {
+    while (elements.parametersList.firstChild) {
+      elements.parametersList.removeChild(elements.parametersList.firstChild);
+    }
+    if (!algorithm) {
+      elements.parametersAlgorithm.textContent = "Выберите алгоритм";
+      elements.parametersAlgorithm.title = "";
+      elements.fillParameters.hidden = true;
+      appendTextElement(elements.parametersList, "div", "dc-parameters-empty", "Выберите алгоритм");
+      return;
+    }
+
+    elements.parametersAlgorithm.textContent = algorithm.name;
+    elements.parametersAlgorithm.title = algorithm.name;
+    var kind = activeDocument ? normalizedKind(activeDocument.kind) : "";
+    var canFill = kind === "query" || kind === "beforequery";
+    elements.fillParameters.hidden = !canFill;
+    elements.fillParameters.disabled = !state.workspace.canExecute || !algorithmDocumentByKind(algorithm, "query");
+
+    if (!algorithm.parameters.length) {
+      appendTextElement(elements.parametersList, "div", "dc-parameters-empty", "Нет параметров");
+      return;
+    }
+    algorithm.parameters.forEach(function (parameter) {
+      var row = document.createElement("div");
+      row.className = "dc-parameter-row";
+      var name = appendTextElement(row, "div", "dc-parameter-name", parameter.name);
+      name.title = parameter.typeName || parameter.name;
+      var value = appendTextElement(row, "div", "dc-parameter-value", parameter.presentation);
+      value.title = parameter.typeName ? parameter.typeName + ": " + parameter.presentation : parameter.presentation;
+      elements.parametersList.appendChild(row);
+    });
+  }
+
+  function fillParametersFromUi() {
+    var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+    var algorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
+    if (!algorithm || !activeDocument || !state.workspace.canExecute) {
+      return;
+    }
+    var queryDocument = algorithmDocumentByKind(algorithm, "query");
+    if (!queryDocument) {
+      return;
+    }
+    if (queryDocument.id !== activeDocument.id) {
+      activateDocumentById(queryDocument.id, true);
+    }
+    requestCommand(queryDocument, "fill-parameters");
   }
 
   function collectSearchResults(roots, query) {
@@ -430,7 +542,7 @@
     var visibleChildren = searchResults
       ? algorithm.children.filter(function (child) { return searchResults.visible.has(child.id); })
       : algorithm.children;
-    var hasBody = algorithm.parameters.length || visibleChildren.length;
+    var hasBody = visibleChildren.length;
     var expanded;
     if (state.searchQuery) {
       expanded = state.searchExpandedAlgorithms.has(algorithm.id)
@@ -465,9 +577,6 @@
 
     body.className = "dc-algorithm-body";
     body.hidden = !expanded;
-    if (algorithm.parameters.length) {
-      body.appendChild(createParameters(algorithm));
-    }
     if (visibleChildren.length) {
       var children = document.createElement("div");
       children.className = "dc-children";
@@ -1021,6 +1130,60 @@
     });
   }
 
+  function setParametersWidth(width) {
+    var viewportLimit = Math.max(220, document.documentElement.clientWidth - 360);
+    var nextWidth = Math.max(220, Math.min(420, viewportLimit, Math.round(width)));
+    state.parametersWidth = nextWidth;
+    elements.parameters.style.width = nextWidth + "px";
+    elements.parameters.style.flexBasis = nextWidth + "px";
+    elements.parametersSplitter.setAttribute("aria-valuenow", String(nextWidth));
+    if (state.editor) {
+      state.editor.layout();
+    }
+  }
+
+  function initializeParametersSplitter() {
+    var startX = 0;
+    var startWidth = 0;
+
+    function onMove(event) {
+      setParametersWidth(startWidth - (event.clientX - startX));
+    }
+
+    function onUp() {
+      document.body.classList.remove("dc-resizing");
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    }
+
+    elements.parametersSplitter.addEventListener("mousedown", function (event) {
+      startX = event.clientX;
+      startWidth = elements.parameters.getBoundingClientRect().width;
+      document.body.classList.add("dc-resizing");
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+      event.preventDefault();
+    });
+    elements.parametersSplitter.addEventListener("dblclick", function () {
+      setParametersWidth(280);
+    });
+    elements.parametersSplitter.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowLeft" || event.keyCode === 37) {
+        setParametersWidth(state.parametersWidth + 16);
+        event.preventDefault();
+      } else if (event.key === "ArrowRight" || event.keyCode === 39) {
+        setParametersWidth(state.parametersWidth - 16);
+        event.preventDefault();
+      } else if (event.key === "Home" || event.keyCode === 36) {
+        setParametersWidth(220);
+        event.preventDefault();
+      } else if (event.key === "End" || event.keyCode === 35) {
+        setParametersWidth(420);
+        event.preventDefault();
+      }
+    });
+  }
+
   function onEditorReady(editorInstance) {
     state.editor = editorInstance;
     if (!state.themeBridgeInstalled && window.monaco && window.monaco.editor) {
@@ -1098,9 +1261,11 @@
     byId("dataconsole-open-workspace").addEventListener("click", requestWorkspaceOpen);
     byId("dataconsole-empty-open").addEventListener("click", requestWorkspaceOpen);
     byId("dataconsole-collapse-all").addEventListener("click", collapseAll);
+    elements.fillParameters.addEventListener("click", fillParametersFromUi);
     initializeSearch();
     initializeModeTabs();
     initializeSplitter();
+    initializeParametersSplitter();
     renderWorkspace();
     if (window.editor) {
       onEditorReady(window.editor);
