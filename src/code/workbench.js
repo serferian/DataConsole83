@@ -38,15 +38,20 @@
     viewStates: new Map(),
     documentButtons: new Map(),
     algorithmNodes: new Map(),
+    parameterRows: new Map(),
     expandedAlgorithms: new Map(),
     searchExpandedAlgorithms: new Map(),
     selectedAlgorithmId: null,
+    selectedParameterId: null,
     activeDocumentId: null,
     pendingDocumentId: null,
     editor: null,
     legacyModel: null,
     suppressContentEvents: false,
     themeBridgeInstalled: false,
+    saveCommandEditor: null,
+    dialogConfirm: null,
+    dialogRestoreFocus: null,
     searchQuery: "",
     searchTimer: null,
     sidebarVisible: true,
@@ -65,6 +70,9 @@
     elements.explorer = byId("dataconsole-explorer");
     elements.fileName = byId("dataconsole-file-name");
     elements.tree = byId("dataconsole-algorithm-tree");
+    elements.addAlgorithm = byId("dataconsole-add-algorithm");
+    elements.addChildAlgorithm = byId("dataconsole-add-child-algorithm");
+    elements.deleteAlgorithm = byId("dataconsole-delete-algorithm");
     elements.searchControl = byId("dataconsole-search-control");
     elements.search = byId("dataconsole-search");
     elements.searchClear = byId("dataconsole-search-clear");
@@ -82,7 +90,16 @@
     elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
     elements.parametersList = byId("dataconsole-parameters-list");
     elements.fillParameters = byId("dataconsole-fill-parameters");
+    elements.addParameter = byId("dataconsole-add-parameter");
+    elements.deleteParameter = byId("dataconsole-delete-parameter");
     elements.splitter = byId("dataconsole-splitter");
+    elements.dialogBackdrop = byId("dataconsole-dialog-backdrop");
+    elements.dialogTitle = byId("dataconsole-dialog-title");
+    elements.dialogMessage = byId("dataconsole-dialog-message");
+    elements.dialogInput = byId("dataconsole-dialog-input");
+    elements.dialogError = byId("dataconsole-dialog-error");
+    elements.dialogCancel = byId("dataconsole-dialog-cancel");
+    elements.dialogConfirm = byId("dataconsole-dialog-confirm");
   }
 
   function normalizedKind(kind) {
@@ -157,6 +174,19 @@
       throw new Error("Поле " + fieldName + " должно быть массивом.");
     }
     return value;
+  }
+
+  function normalizeParameter(rawParameter, fieldName) {
+    if (!rawParameter || typeof rawParameter !== "object") {
+      throw new Error("Элемент " + fieldName + " должен быть объектом.");
+    }
+    return {
+      id: requiredIdentity(rawParameter.id, fieldName + ".id"),
+      name: String(rawParameter.name || "Параметр"),
+      typeName: rawParameter.typeName === undefined ? "" : String(rawParameter.typeName),
+      presentation: rawParameter.presentation === undefined ? "" : String(rawParameter.presentation),
+      editableInline: Boolean(rawParameter.editableInline)
+    };
   }
 
   function emitBridgeEvent(eventName, params) {
@@ -246,17 +276,7 @@
       }
 
       for (index = 0; index < rawParameters.length; index += 1) {
-        var rawParameter = rawParameters[index];
-        if (!rawParameter || typeof rawParameter !== "object") {
-          throw new Error("Элемент algorithm.parameters должен быть объектом.");
-        }
-        algorithm.parameters.push({
-          id: requiredIdentity(rawParameter.id, "parameter.id"),
-          name: String(rawParameter.name || "Параметр"),
-          typeName: rawParameter.typeName === undefined ? "" : String(rawParameter.typeName),
-          presentation: rawParameter.presentation === undefined ? "" : String(rawParameter.presentation),
-          editableInline: Boolean(rawParameter.editableInline)
-        });
+        algorithm.parameters.push(normalizeParameter(rawParameters[index], "algorithm.parameters"));
       }
 
       rebuildAlgorithmSearchIndex(algorithm);
@@ -432,6 +452,9 @@
     if (state.selectedAlgorithmId === normalizedAlgorithmId && !forceReveal) {
       return;
     }
+    if (state.selectedAlgorithmId !== normalizedAlgorithmId) {
+      state.selectedParameterId = null;
+    }
     state.selectedAlgorithmId = normalizedAlgorithmId;
     revealSelectedAlgorithm(normalizedAlgorithmId);
     updateRenderedAlgorithmStates();
@@ -529,13 +552,16 @@
   }
 
   function renderParametersPanel(algorithm, activeDocument) {
+    state.parameterRows = new Map();
     while (elements.parametersList.firstChild) {
       elements.parametersList.removeChild(elements.parametersList.firstChild);
     }
     if (!algorithm) {
+      state.selectedParameterId = null;
       elements.parametersAlgorithm.textContent = "Выберите алгоритм";
       elements.parametersAlgorithm.title = "";
       elements.fillParameters.hidden = true;
+      updateMutationButtonStates(null);
       appendTextElement(elements.parametersList, "div", "dc-parameters-empty", "Выберите алгоритм");
       return;
     }
@@ -547,19 +573,67 @@
     elements.fillParameters.hidden = !canFill;
     elements.fillParameters.disabled = !state.workspace.canExecute || !algorithmDocumentByKind(algorithm, "query");
 
+    var selectedParameterExists = algorithm.parameters.some(function (parameter) {
+      return parameter.id === state.selectedParameterId;
+    });
+    if (!selectedParameterExists) {
+      state.selectedParameterId = null;
+    }
+    updateMutationButtonStates(algorithm);
+
     if (!algorithm.parameters.length) {
       appendTextElement(elements.parametersList, "div", "dc-parameters-empty", "Нет параметров");
       return;
     }
     algorithm.parameters.forEach(function (parameter) {
       var row = document.createElement("div");
-      row.className = "dc-parameter-row";
+      var isSelected = parameter.id === state.selectedParameterId;
+      row.className = "dc-parameter-row" + (isSelected ? " dc-selected" : "");
+      row.tabIndex = 0;
+      row.setAttribute("role", "button");
+      row.setAttribute("aria-pressed", isSelected ? "true" : "false");
       var name = appendTextElement(row, "div", "dc-parameter-name", parameter.name);
       name.title = parameter.typeName || parameter.name;
       var value = appendTextElement(row, "div", "dc-parameter-value", parameter.presentation);
       value.title = parameter.typeName ? parameter.typeName + ": " + parameter.presentation : parameter.presentation;
+      row.addEventListener("click", function () {
+        selectParameter(parameter.id);
+      });
+      row.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+          selectParameter(parameter.id);
+          event.preventDefault();
+        }
+      });
+      state.parameterRows.set(parameter.id, row);
       elements.parametersList.appendChild(row);
     });
+  }
+
+  function updateMutationButtonStates(algorithm) {
+    var canMutate = Boolean(state.workspace && state.workspace.canExecute);
+    var hasAlgorithm = Boolean(algorithm);
+    elements.addAlgorithm.disabled = !canMutate;
+    elements.addChildAlgorithm.disabled = !canMutate || !hasAlgorithm;
+    elements.deleteAlgorithm.disabled = !canMutate || !hasAlgorithm;
+    elements.addParameter.disabled = !canMutate || !hasAlgorithm;
+    elements.deleteParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
+  }
+
+  function selectParameter(parameterId) {
+    var previousId = state.selectedParameterId;
+    state.selectedParameterId = String(parameterId);
+    if (previousId && state.parameterRows.has(previousId)) {
+      state.parameterRows.get(previousId).classList.remove("dc-selected");
+      state.parameterRows.get(previousId).setAttribute("aria-pressed", "false");
+    }
+    if (state.parameterRows.has(state.selectedParameterId)) {
+      state.parameterRows.get(state.selectedParameterId).classList.add("dc-selected");
+      state.parameterRows.get(state.selectedParameterId).setAttribute("aria-pressed", "true");
+    }
+    var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+    var algorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
+    updateMutationButtonStates(algorithm);
   }
 
   function fillParametersFromUi() {
@@ -576,6 +650,178 @@
       activateDocumentById(queryDocument.id, true);
     }
     requestCommand(queryDocument, "fill-parameters");
+  }
+
+  function currentAlgorithm() {
+    if (!state.selectedAlgorithmId) {
+      return null;
+    }
+    return state.algorithms.get(state.selectedAlgorithmId) || null;
+  }
+
+  function closeWorkbenchDialog() {
+    elements.dialogBackdrop.hidden = true;
+    state.dialogConfirm = null;
+    elements.dialogError.hidden = true;
+    elements.dialogError.textContent = "";
+    if (state.dialogRestoreFocus && typeof state.dialogRestoreFocus.focus === "function") {
+      state.dialogRestoreFocus.focus();
+    }
+    state.dialogRestoreFocus = null;
+  }
+
+  function showWorkbenchDialog(options) {
+    state.dialogConfirm = options.onConfirm;
+    state.dialogRestoreFocus = document.activeElement;
+    elements.dialogTitle.textContent = options.title;
+    elements.dialogMessage.textContent = options.message || "";
+    elements.dialogInput.hidden = !options.requiresName;
+    elements.dialogInput.value = options.value || "";
+    elements.dialogInput.setAttribute("aria-label", options.inputLabel || options.title);
+    elements.dialogError.hidden = true;
+    elements.dialogError.textContent = "";
+    elements.dialogConfirm.textContent = options.confirmLabel || "Продолжить";
+    elements.dialogBackdrop.hidden = false;
+    window.setTimeout(function () {
+      if (options.requiresName) {
+        elements.dialogInput.focus();
+        elements.dialogInput.select();
+      } else {
+        elements.dialogConfirm.focus();
+      }
+    }, 0);
+  }
+
+  function confirmWorkbenchDialog() {
+    if (typeof state.dialogConfirm !== "function") {
+      closeWorkbenchDialog();
+      return;
+    }
+    var confirmAction = state.dialogConfirm;
+    var value = String(elements.dialogInput.value || "").replace(/^\s+|\s+$/g, "");
+    if (!elements.dialogInput.hidden && !value) {
+      elements.dialogError.textContent = "Введите наименование.";
+      elements.dialogError.hidden = false;
+      elements.dialogInput.focus();
+      return;
+    }
+    closeWorkbenchDialog();
+    confirmAction(value);
+  }
+
+  function mutationPayload(action, additional) {
+    var activeDocument = getActiveDocument();
+    var payload = {
+      sessionId: state.workspace ? state.workspace.sessionId : "",
+      action: action,
+      algorithmId: state.selectedAlgorithmId || ""
+    };
+    if (activeDocument) {
+      payload.documentId = activeDocument.documentId;
+      payload.documentKind = activeDocument.documentKind;
+    }
+    if (additional) {
+      Object.keys(additional).forEach(function (key) {
+        payload[key] = additional[key];
+      });
+    }
+    return payload;
+  }
+
+  function requestWorkspaceMutation(action, additional) {
+    if (!state.workspace || !state.workspace.canExecute) {
+      return;
+    }
+    emitBridgeEvent("EVENT_WORKSPACE_MUTATION_REQUESTED", mutationPayload(action, additional));
+  }
+
+  function addAlgorithmFromUi(asChild) {
+    var algorithm = currentAlgorithm();
+    var parentAlgorithmId = asChild && algorithm ? algorithm.id : (algorithm && algorithm.parentId ? algorithm.parentId : "");
+    showWorkbenchDialog({
+      title: asChild ? "Новый вложенный алгоритм" : "Новый алгоритм",
+      message: asChild && algorithm ? "Будет добавлен внутрь «" + algorithm.name + "»." : "Введите наименование алгоритма.",
+      inputLabel: "Наименование алгоритма",
+      requiresName: true,
+      confirmLabel: "Добавить",
+      onConfirm: function (name) {
+        requestWorkspaceMutation("add-algorithm", { name: name, parentAlgorithmId: parentAlgorithmId });
+      }
+    });
+  }
+
+  function renameAlgorithmFromUi(algorithm) {
+    if (!algorithm || !state.workspace || !state.workspace.canExecute) {
+      return;
+    }
+    showWorkbenchDialog({
+      title: "Переименование алгоритма",
+      message: "Введите новое наименование алгоритма.",
+      inputLabel: "Наименование алгоритма",
+      requiresName: true,
+      value: algorithm.name,
+      confirmLabel: "Переименовать",
+      onConfirm: function (name) {
+        if (name !== algorithm.name) {
+          requestWorkspaceMutation("rename-algorithm", { algorithmId: algorithm.id, name: name });
+        }
+      }
+    });
+  }
+
+  function deleteAlgorithmFromUi() {
+    var algorithm = currentAlgorithm();
+    if (!algorithm) {
+      return;
+    }
+    showWorkbenchDialog({
+      title: "Удаление алгоритма",
+      message: "Удалить «" + algorithm.name + "» вместе с вложенными алгоритмами и их параметрами?",
+      requiresName: false,
+      confirmLabel: "Удалить",
+      onConfirm: function () {
+        requestWorkspaceMutation("delete-algorithm", {});
+      }
+    });
+  }
+
+  function addParameterFromUi() {
+    var algorithm = currentAlgorithm();
+    if (!algorithm) {
+      return;
+    }
+    showWorkbenchDialog({
+      title: "Новый параметр",
+      message: "Параметр алгоритма «" + algorithm.name + "».",
+      inputLabel: "Имя параметра",
+      requiresName: true,
+      confirmLabel: "Добавить",
+      onConfirm: function (name) {
+        requestWorkspaceMutation("add-parameter", { name: name });
+      }
+    });
+  }
+
+  function deleteParameterFromUi() {
+    var algorithm = currentAlgorithm();
+    if (!algorithm || !state.selectedParameterId) {
+      return;
+    }
+    var parameter = algorithm.parameters.filter(function (item) {
+      return item.id === state.selectedParameterId;
+    })[0];
+    if (!parameter) {
+      return;
+    }
+    showWorkbenchDialog({
+      title: "Удаление параметра",
+      message: "Удалить параметр «" + parameter.name + "»?",
+      requiresName: false,
+      confirmLabel: "Удалить",
+      onConfirm: function () {
+        requestWorkspaceMutation("delete-parameter", { parameterId: parameter.id });
+      }
+    });
   }
 
   function collectSearchResults(roots, query) {
@@ -648,9 +894,12 @@
     icon.className = "dc-algorithm-icon" + (algorithm.documents.length ? " dc-algorithm-icon-code" : "");
     icon.setAttribute("aria-hidden", "true");
     heading.appendChild(icon);
-    appendTextElement(heading, "span", "dc-algorithm-name", algorithm.name).title = algorithm.name;
+    var algorithmName = appendTextElement(heading, "span", "dc-algorithm-name", algorithm.name);
+    algorithmName.title = algorithm.name;
+    var documentButtons = null;
     if (algorithm.documents.length) {
-      heading.appendChild(createTreeDocumentButtons(algorithm));
+      documentButtons = createTreeDocumentButtons(algorithm);
+      heading.appendChild(documentButtons);
     }
     node.appendChild(heading);
 
@@ -670,15 +919,29 @@
       node: node,
       heading: heading,
       twistie: twistie,
-      body: body
+      body: body,
+      name: algorithmName,
+      documentButtons: documentButtons
     });
 
     heading.addEventListener("click", function () {
-      activateAlgorithmFromUi(algorithm);
+      if (state.selectedAlgorithmId === algorithm.id) {
+        renameAlgorithmFromUi(algorithm);
+      } else {
+        activateAlgorithmFromUi(algorithm);
+        heading.focus();
+      }
     });
     heading.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+      if (event.key === "F2" || event.keyCode === 113) {
+        if (state.selectedAlgorithmId !== algorithm.id) {
+          selectAlgorithmInTree(algorithm.id, true);
+        }
+        renameAlgorithmFromUi(algorithm);
+        event.preventDefault();
+      } else if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
         activateAlgorithmFromUi(algorithm);
+        heading.focus();
         event.preventDefault();
       }
     });
@@ -888,6 +1151,7 @@
       state.documents = indexed.documents;
       state.activeDocumentId = null;
       state.selectedAlgorithmId = null;
+      state.selectedParameterId = null;
 
       state.suppressContentEvents = true;
       try {
@@ -969,6 +1233,38 @@
         }
         return;
       }
+      if (operation.op === "replaceAlgorithmParameters") {
+        var replaceAlgorithmId = requiredIdentity(operation.algorithmId, "operation.algorithmId");
+        if (!state.algorithms.has(replaceAlgorithmId)) {
+          throw new Error("Алгоритм не найден: " + replaceAlgorithmId + ".");
+        }
+        var rawParameters = asArray(operation.parameters, "operation.parameters");
+        var parameterIds = new Map();
+        operation.normalizedParameters = rawParameters.map(function (rawParameter) {
+          var parameter = normalizeParameter(rawParameter, "operation.parameters");
+          if (parameterIds.has(parameter.id)) {
+            throw new Error("Повторяется идентификатор параметра: " + parameter.id + ".");
+          }
+          parameterIds.set(parameter.id, true);
+          return parameter;
+        });
+        operation.selectedParameterId = operation.selectedParameterId === undefined || operation.selectedParameterId === null
+          ? ""
+          : String(operation.selectedParameterId);
+        return;
+      }
+      if (operation.op === "renameAlgorithm") {
+        var renameAlgorithmId = requiredIdentity(operation.algorithmId, "operation.algorithmId");
+        if (!state.algorithms.has(renameAlgorithmId)) {
+          throw new Error("Алгоритм не найден: " + renameAlgorithmId + ".");
+        }
+        operation.normalizedName = String(operation.name === undefined || operation.name === null ? "" : operation.name)
+          .replace(/^\s+|\s+$/g, "");
+        if (!operation.normalizedName) {
+          throw new Error("renameAlgorithm требует непустое поле name.");
+        }
+        return;
+      }
       throw new Error("Неподдерживаемая операция patch: " + String(operation.op) + ".");
     });
     return operations;
@@ -1010,10 +1306,48 @@
               rebuildAlgorithmSearchIndex(algorithm);
             }
           });
+        } else if (operation.op === "replaceAlgorithmParameters") {
+          var parametersAlgorithm = state.algorithms.get(String(operation.algorithmId));
+          parametersAlgorithm.parameters = operation.normalizedParameters;
+          rebuildAlgorithmSearchIndex(parametersAlgorithm);
+          if (operation.selectedParameterId && parametersAlgorithm.parameters.some(function (parameter) {
+            return parameter.id === operation.selectedParameterId;
+          })) {
+            state.selectedParameterId = operation.selectedParameterId;
+          } else if (!parametersAlgorithm.parameters.some(function (parameter) {
+            return parameter.id === state.selectedParameterId;
+          })) {
+            state.selectedParameterId = null;
+          }
+        } else if (operation.op === "renameAlgorithm") {
+          var renamedAlgorithm = state.algorithms.get(String(operation.algorithmId));
+          renamedAlgorithm.name = operation.normalizedName;
+          rebuildAlgorithmSearchIndex(renamedAlgorithm);
+          var renderedAlgorithm = state.algorithmNodes.get(renamedAlgorithm.id);
+          if (renderedAlgorithm) {
+            renderedAlgorithm.name.textContent = renamedAlgorithm.name;
+            renderedAlgorithm.name.title = renamedAlgorithm.name;
+            var isExpanded = renderedAlgorithm.twistie.getAttribute("aria-expanded") === "true";
+            renderedAlgorithm.twistie.setAttribute("aria-label", (isExpanded ? "Свернуть " : "Развернуть ") + renamedAlgorithm.name);
+            if (renderedAlgorithm.documentButtons) {
+              renderedAlgorithm.documentButtons.setAttribute("aria-label", "Документы алгоритма " + renamedAlgorithm.name);
+            }
+          }
+          if (state.selectedAlgorithmId === renamedAlgorithm.id) {
+            elements.parametersAlgorithm.textContent = renamedAlgorithm.name;
+            elements.parametersAlgorithm.title = renamedAlgorithm.name;
+          }
         }
       });
-      if (state.searchQuery || operations.some(function (operation) { return operation.op === "updateParameter"; })) {
+      var parametersChanged = operations.some(function (operation) {
+        return operation.op === "updateParameter" || operation.op === "replaceAlgorithmParameters";
+      });
+      if (state.searchQuery) {
         renderWorkspace();
+      } else if (parametersChanged) {
+        var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+        var activeAlgorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
+        renderParametersPanel(activeAlgorithm, activeDocument);
       }
       return { success: true, applied: operations.length };
     } catch (error) {
@@ -1123,6 +1457,36 @@
       }
     });
     elements.searchClear.addEventListener("click", clearSearch);
+  }
+
+  function initializeMutationControls() {
+    elements.addAlgorithm.addEventListener("click", function () { addAlgorithmFromUi(false); });
+    elements.addChildAlgorithm.addEventListener("click", function () { addAlgorithmFromUi(true); });
+    elements.deleteAlgorithm.addEventListener("click", deleteAlgorithmFromUi);
+    elements.addParameter.addEventListener("click", addParameterFromUi);
+    elements.deleteParameter.addEventListener("click", deleteParameterFromUi);
+    elements.dialogCancel.addEventListener("click", closeWorkbenchDialog);
+    elements.dialogConfirm.addEventListener("click", confirmWorkbenchDialog);
+    elements.dialogBackdrop.addEventListener("click", function (event) {
+      if (event.target === elements.dialogBackdrop) {
+        closeWorkbenchDialog();
+      }
+    });
+    elements.dialogInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        confirmWorkbenchDialog();
+        event.preventDefault();
+      } else if (event.key === "Escape" || event.keyCode === 27) {
+        closeWorkbenchDialog();
+        event.preventDefault();
+      }
+    });
+    elements.dialogBackdrop.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" || event.keyCode === 27) {
+        closeWorkbenchDialog();
+        event.preventDefault();
+      }
+    });
   }
 
   function enabledModeTabs() {
@@ -1302,6 +1666,16 @@
       };
       state.themeBridgeInstalled = true;
     }
+    if (editorInstance && typeof editorInstance.addCommand === "function"
+        && window.monaco && window.monaco.KeyMod && window.monaco.KeyCode
+        && state.saveCommandEditor !== editorInstance) {
+      editorInstance.addCommand(window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.KEY_S, function () {
+        if (state.workspace && state.workspace.canExecute) {
+          emitBridgeEvent("EVENT_WORKSPACE_SAVE_REQUESTED", mutationPayload("save-workspace", {}));
+        }
+      });
+      state.saveCommandEditor = editorInstance;
+    }
     if (!state.legacyModel && editorInstance) {
       state.legacyModel = editorInstance.getModel();
     }
@@ -1370,6 +1744,7 @@
     byId("dataconsole-collapse-all").addEventListener("click", collapseAll);
     elements.fillParameters.addEventListener("click", fillParametersFromUi);
     initializeSearch();
+    initializeMutationControls();
     initializeModeTabs();
     initializeSplitter();
     initializeParametersSplitter();

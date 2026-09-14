@@ -20,6 +20,12 @@
           <div id="dataconsole-file-name" class="dc-file-name">Рабочая область не открыта</div>
         </div>
         <div class="dc-explorer-actions">
+          <button id="dataconsole-add-algorithm" class="dc-icon-button" type="button"
+            aria-label="Добавить алгоритм" title="Добавить алгоритм рядом">+</button>
+          <button id="dataconsole-add-child-algorithm" class="dc-icon-button" type="button"
+            aria-label="Добавить вложенный алгоритм" title="Добавить вложенный алгоритм">↳</button>
+          <button id="dataconsole-delete-algorithm" class="dc-icon-button" type="button"
+            aria-label="Удалить алгоритм" title="Удалить выбранный алгоритм">−</button>
           <button id="dataconsole-open-workspace" class="dc-icon-button" type="button"
             aria-label="Открыть рабочую область" title="Открыть рабочую область">↗</button>
           <button id="dataconsole-collapse-all" class="dc-icon-button" type="button"
@@ -91,8 +97,14 @@
               <div class="dc-parameters-title">ПАРАМЕТРЫ</div>
               <div id="dataconsole-parameters-algorithm" class="dc-parameters-algorithm">Выберите алгоритм</div>
             </div>
-            <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
-              aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
+            <div class="dc-parameters-actions">
+              <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
+                aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
+              <button id="dataconsole-add-parameter" class="dc-icon-button" type="button"
+                aria-label="Добавить параметр" title="Добавить параметр">+</button>
+              <button id="dataconsole-delete-parameter" class="dc-icon-button" type="button"
+                aria-label="Удалить параметр" title="Удалить выбранный параметр">−</button>
+            </div>
           </div>
           <div id="dataconsole-parameters-list" class="dc-parameters-list">
             <div class="dc-parameters-empty">Выберите алгоритм</div>
@@ -100,6 +112,19 @@
         </aside>
       </div>
     </main>
+  </div>
+  <div id="dataconsole-dialog-backdrop" class="dc-dialog-backdrop" hidden>
+    <div class="dc-dialog" role="dialog" aria-modal="true" aria-labelledby="dataconsole-dialog-title">
+      <div id="dataconsole-dialog-title" class="dc-dialog-title"></div>
+      <div id="dataconsole-dialog-message" class="dc-dialog-message"></div>
+      <input id="dataconsole-dialog-input" class="dc-dialog-input" type="text" maxlength="150"
+        autocomplete="off" spellcheck="false">
+      <div id="dataconsole-dialog-error" class="dc-dialog-error" aria-live="polite" hidden></div>
+      <div class="dc-dialog-actions">
+        <button id="dataconsole-dialog-cancel" class="dc-dialog-button" type="button">Отмена</button>
+        <button id="dataconsole-dialog-confirm" class="dc-dialog-button dc-dialog-primary" type="button">Добавить</button>
+      </div>
+    </div>
   </div>
   <button id="event-button"></button>
 
