@@ -68,6 +68,8 @@
     parametersVisible: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
+    workspaceBusy: false,
+    workspaceBusyOperationId: "",
     sidebarWidth: 260,
     parametersWidth: 280
   };
@@ -146,6 +148,9 @@
     elements.dialogError = byId("dataconsole-dialog-error");
     elements.dialogCancel = byId("dataconsole-dialog-cancel");
     elements.dialogConfirm = byId("dataconsole-dialog-confirm");
+    elements.workspaceBusy = byId("dataconsole-workspace-busy");
+    elements.workspaceBusyMessage = byId("dataconsole-workspace-busy-message");
+    elements.workspaceBusyFile = byId("dataconsole-workspace-busy-file");
   }
 
   function normalizedKind(kind) {
@@ -1427,15 +1432,55 @@
 
   function renderFileState() {
     var hasWorkspace = Boolean(state.workspace);
-    var canChange = Boolean(state.workspace && state.workspace.canExecute);
+    var canChange = Boolean(state.workspace && state.workspace.canExecute && !state.workspaceBusy);
+    var canOpen = Boolean(hasWorkspace && !state.workspaceBusy);
     var displayName = hasWorkspace ? (state.workspace.fileName || "Без имени") : "Рабочая область не открыта";
     elements.fileName.textContent = displayName;
     elements.fileName.title = displayName;
     elements.fileName.classList.toggle("dc-modified", Boolean(hasWorkspace && state.workspace.modified));
     elements.newWorkspace.disabled = !canChange;
-    elements.openWorkspace.disabled = !hasWorkspace;
+    elements.openWorkspace.disabled = !canOpen;
     elements.saveWorkspace.disabled = !canChange;
     elements.saveWorkspaceAs.disabled = !canChange;
+    byId("dataconsole-empty-open").disabled = state.workspaceBusy;
+  }
+
+  function setWorkspaceBusy(payloadJson) {
+    try {
+      var payload = parseJsonValue(payloadJson, "setWorkspaceBusy");
+      var operationId = requiredIdentity(payload.operationId, "operationId");
+      if (typeof payload.busy !== "boolean") {
+        throw new Error("Поле busy должно иметь тип Булево.");
+      }
+      if (payload.message !== undefined && payload.message !== null && typeof payload.message !== "string") {
+        throw new Error("Поле message должно иметь тип Строка.");
+      }
+      if (payload.fileName !== undefined && payload.fileName !== null && typeof payload.fileName !== "string") {
+        throw new Error("Поле fileName должно иметь тип Строка.");
+      }
+
+      if (!payload.busy && state.workspaceBusy && operationId !== state.workspaceBusyOperationId) {
+        return { success: true, applied: false, stale: true };
+      }
+
+      state.workspaceBusy = payload.busy;
+      state.workspaceBusyOperationId = payload.busy ? operationId : "";
+      elements.workbench.setAttribute("aria-busy", payload.busy ? "true" : "false");
+      if (payload.busy) {
+        elements.workspaceBusyMessage.textContent = payload.message || "Загрузка файла алгоритмов…";
+        elements.workspaceBusyFile.textContent = payload.fileName || "";
+        elements.workspaceBusyFile.hidden = !payload.fileName;
+        elements.workspaceBusy.hidden = false;
+      } else {
+        elements.workspaceBusy.hidden = true;
+        elements.workspaceBusyFile.textContent = "";
+        elements.workspaceBusyFile.hidden = true;
+      }
+      renderFileState();
+      return { success: true, applied: true, busy: state.workspaceBusy };
+    } catch (error) {
+      return reportError("setWorkspaceBusy", error);
+    }
   }
 
   function renderWorkspace() {
@@ -2210,7 +2255,7 @@
   }
 
   function requestWorkspaceFileAction(eventName, action, requiresWriteAccess) {
-    if (!state.workspace || (requiresWriteAccess && !state.workspace.canExecute)) {
+    if (state.workspaceBusy || !state.workspace || (requiresWriteAccess && !state.workspace.canExecute)) {
       return;
     }
     emitBridgeEvent(eventName, mutationPayload(action, {}));
@@ -2463,6 +2508,7 @@
 
   window.DataConsoleApp = {
     loadWorkspace: loadWorkspace,
+    setWorkspaceBusy: setWorkspaceBusy,
     applyPatch: applyPatch,
     activateDocument: activateDocument,
     getActiveDocument: getActiveDocument,
