@@ -254,10 +254,20 @@ html.dc-theme-dark {
   min-height: 25px;
   padding-right: 5px;
   overflow: hidden;
+  cursor: pointer;
+  outline: none;
 }
 
 .dc-algorithm-heading:hover {
   background: var(--dc-hover);
+}
+
+.dc-algorithm-heading.dc-selected {
+  background: var(--dc-selected);
+}
+
+.dc-algorithm-heading:focus {
+  box-shadow: inset 0 0 0 1px var(--dc-focus);
 }
 
 .dc-twistie {

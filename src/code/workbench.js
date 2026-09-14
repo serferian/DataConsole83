@@ -37,8 +37,10 @@
     models: new Map(),
     viewStates: new Map(),
     documentButtons: new Map(),
+    algorithmNodes: new Map(),
     expandedAlgorithms: new Map(),
     searchExpandedAlgorithms: new Map(),
+    selectedAlgorithmId: null,
     activeDocumentId: null,
     pendingDocumentId: null,
     editor: null,
@@ -281,6 +283,9 @@
         sessionId: snapshot.sessionId === undefined ? "" : String(snapshot.sessionId),
         fileName: snapshot.fileName === undefined ? "" : String(snapshot.fileName),
         canExecute: snapshot.canExecute === undefined ? true : Boolean(snapshot.canExecute),
+        selectedAlgorithmId: snapshot.selectedAlgorithmId === undefined || snapshot.selectedAlgorithmId === null
+          ? ""
+          : String(snapshot.selectedAlgorithmId),
         algorithms: normalizedRoots
       },
       algorithms: algorithms,
@@ -368,6 +373,77 @@
       }
     }
     return null;
+  }
+
+  function preferredDocumentForAlgorithm(algorithm) {
+    var queryDocument = null;
+    var firstDocument = null;
+    for (var index = 0; index < DOCUMENT_KIND_ORDER.length; index += 1) {
+      var documentItem = algorithmDocumentByKind(algorithm, DOCUMENT_KIND_ORDER[index]);
+      if (!documentItem) {
+        continue;
+      }
+      if (!firstDocument) {
+        firstDocument = documentItem;
+      }
+      if (normalizedKind(documentItem.kind) === "query") {
+        queryDocument = documentItem;
+      }
+      if (documentItem.hasContent) {
+        return documentItem;
+      }
+    }
+    return queryDocument || firstDocument;
+  }
+
+  function revealSelectedAlgorithm(algorithmId) {
+    var current = state.algorithms.get(String(algorithmId));
+    state.expandedAlgorithms = new Map();
+    state.searchExpandedAlgorithms = new Map();
+    state.algorithms.forEach(function (algorithm) {
+      state.expandedAlgorithms.set(algorithm.id, false);
+      state.searchExpandedAlgorithms.set(algorithm.id, false);
+    });
+    while (current) {
+      state.expandedAlgorithms.set(current.id, true);
+      state.searchExpandedAlgorithms.set(current.id, true);
+      current = current.parentId ? state.algorithms.get(current.parentId) : null;
+    }
+  }
+
+  function updateRenderedAlgorithmStates() {
+    var expansion = state.searchQuery ? state.searchExpandedAlgorithms : state.expandedAlgorithms;
+    state.algorithmNodes.forEach(function (rendered, algorithmId) {
+      var algorithm = state.algorithms.get(algorithmId);
+      var isSelected = state.selectedAlgorithmId === algorithmId;
+      var expanded = expansion.has(algorithmId)
+        ? expansion.get(algorithmId)
+        : (state.searchQuery ? true : algorithm.depth < 2);
+      rendered.node.setAttribute("aria-selected", isSelected ? "true" : "false");
+      rendered.heading.classList.toggle("dc-selected", isSelected);
+      rendered.twistie.setAttribute("aria-expanded", expanded ? "true" : "false");
+      rendered.twistie.setAttribute("aria-label", (expanded ? "Свернуть " : "Развернуть ") + algorithm.name);
+      rendered.body.hidden = !expanded;
+    });
+  }
+
+  function selectAlgorithmInTree(algorithmId, forceReveal) {
+    var normalizedAlgorithmId = String(algorithmId);
+    if (state.selectedAlgorithmId === normalizedAlgorithmId && !forceReveal) {
+      return;
+    }
+    state.selectedAlgorithmId = normalizedAlgorithmId;
+    revealSelectedAlgorithm(normalizedAlgorithmId);
+    updateRenderedAlgorithmStates();
+  }
+
+  function activateAlgorithmFromUi(algorithm) {
+    var documentItem = preferredDocumentForAlgorithm(algorithm);
+    if (!documentItem) {
+      return;
+    }
+    selectAlgorithmInTree(algorithm.id, true);
+    activateDocumentFromUi(algorithm.id, documentItem.kind);
   }
 
   function updateModeBar() {
@@ -552,11 +628,14 @@
       expanded = state.expandedAlgorithms.has(algorithm.id) ? state.expandedAlgorithms.get(algorithm.id) : algorithm.depth < 2;
     }
 
+    var isSelected = state.selectedAlgorithmId === algorithm.id;
     node.className = "dc-algorithm";
     node.setAttribute("role", "treeitem");
     node.setAttribute("aria-level", String(algorithm.depth + 1));
+    node.setAttribute("aria-selected", isSelected ? "true" : "false");
     node.style.animationDelay = String(Math.min(order * 16, 160)) + "ms";
-    heading.className = "dc-algorithm-heading";
+    heading.className = "dc-algorithm-heading" + (isSelected ? " dc-selected" : "");
+    heading.tabIndex = 0;
     twistie.type = "button";
     twistie.className = "dc-twistie" + (hasBody ? "" : " dc-twistie-empty");
     twistie.setAttribute("aria-label", (expanded ? "Свернуть " : "Развернуть ") + algorithm.name);
@@ -587,8 +666,27 @@
       body.appendChild(children);
     }
     node.appendChild(body);
+    state.algorithmNodes.set(algorithm.id, {
+      node: node,
+      heading: heading,
+      twistie: twistie,
+      body: body
+    });
 
-    twistie.addEventListener("click", function () {
+    heading.addEventListener("click", function () {
+      activateAlgorithmFromUi(algorithm);
+    });
+    heading.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+        activateAlgorithmFromUi(algorithm);
+        event.preventDefault();
+      }
+    });
+
+    twistie.addEventListener("click", function (event) {
+      if (event && event.stopPropagation) {
+        event.stopPropagation();
+      }
       if (!hasBody) {
         return;
       }
@@ -611,6 +709,7 @@
       cacheElements();
     }
     state.documentButtons = new Map();
+    state.algorithmNodes = new Map();
     while (elements.tree.firstChild) {
       elements.tree.removeChild(elements.tree.firstChild);
     }
@@ -747,6 +846,7 @@
 
     state.activeDocumentId = documentItem.id;
     state.pendingDocumentId = null;
+    selectAlgorithmInTree(documentItem.algorithmId);
     if (previousDocumentId) {
       updateDocumentButtonState(previousDocumentId);
     }
@@ -787,6 +887,7 @@
       state.algorithms = indexed.algorithms;
       state.documents = indexed.documents;
       state.activeDocumentId = null;
+      state.selectedAlgorithmId = null;
 
       state.suppressContentEvents = true;
       try {
@@ -803,19 +904,24 @@
         state.suppressContentEvents = false;
       }
 
-      var retainedExpansion = new Map();
-      state.expandedAlgorithms.forEach(function (expanded, algorithmId) {
-        if (state.algorithms.has(algorithmId)) {
-          retainedExpansion.set(algorithmId, expanded);
-        }
-      });
-      state.expandedAlgorithms = retainedExpansion;
-      state.searchExpandedAlgorithms = new Map();
+      var selectedAlgorithm = state.workspace.selectedAlgorithmId
+        ? state.algorithms.get(state.workspace.selectedAlgorithmId)
+        : null;
+      var previousDocument = previousActiveId && state.documents.has(previousActiveId)
+        ? state.documents.get(previousActiveId)
+        : null;
+      var nextDocument = previousDocument && (!selectedAlgorithm || previousDocument.algorithmId === selectedAlgorithm.id)
+        ? previousDocument
+        : (selectedAlgorithm ? preferredDocumentForAlgorithm(selectedAlgorithm) : indexed.orderedDocuments[0]);
+      if (nextDocument) {
+        state.selectedAlgorithmId = nextDocument.algorithmId;
+        revealSelectedAlgorithm(nextDocument.algorithmId);
+      } else {
+        state.expandedAlgorithms = new Map();
+        state.searchExpandedAlgorithms = new Map();
+      }
       renderWorkspace();
 
-      var nextDocument = previousActiveId && state.documents.has(previousActiveId)
-        ? state.documents.get(previousActiveId)
-        : indexed.orderedDocuments[0];
       if (nextDocument) {
         activateDocumentById(nextDocument.id, false);
       }
@@ -1068,8 +1174,9 @@
   function collapseAll() {
     state.algorithms.forEach(function (algorithm) {
       state.expandedAlgorithms.set(algorithm.id, false);
+      state.searchExpandedAlgorithms.set(algorithm.id, false);
     });
-    renderWorkspace();
+    updateRenderedAlgorithmStates();
   }
 
   function requestWorkspaceOpen() {
