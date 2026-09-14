@@ -970,6 +970,9 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 .dc-parameters-title { font-size: 10px; font-weight: 700; line-height: 15px; letter-spacing: .07em; }
 .dc-parameters-algorithm { overflow: hidden; color: var(--dc-muted); font-size: 11px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .dc-parameters-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; margin-left: 6px; }
+.dc-parameter-edit-action,
+.dc-parameter-clear-action { font-size: 14px; line-height: 22px; }
+.dc-parameter-clear-action { font-size: 17px; font-weight: 400; }
 .dc-fill-parameters { flex: 0 0 auto; height: 25px; padding: 0 7px; line-height: 23px; }
 .dc-fill-parameters[hidden] { display: none; }
 .dc-parameters-list { flex: 1 1 auto; min-height: 0; padding: 5px 0 12px; overflow-y: auto; }

@@ -117,6 +117,8 @@
     elements.parametersSplitter = byId("dataconsole-parameters-splitter");
     elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
     elements.parametersList = byId("dataconsole-parameters-list");
+    elements.editParameter = byId("dataconsole-edit-parameter");
+    elements.clearParameter = byId("dataconsole-clear-parameter");
     elements.fillParameters = byId("dataconsole-fill-parameters");
     elements.addParameter = byId("dataconsole-add-parameter");
     elements.deleteParameter = byId("dataconsole-delete-parameter");
@@ -854,8 +856,16 @@
       row.addEventListener("click", function () {
         selectParameter(parameter.id);
       });
+      row.addEventListener("dblclick", function () {
+        selectParameter(parameter.id);
+        requestParameterEdit("edit", algorithm.id, parameter.id);
+      });
       row.addEventListener("keydown", function (event) {
-        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+        if (event.key === "Enter" || event.keyCode === 13) {
+          selectParameter(parameter.id);
+          requestParameterEdit("edit", algorithm.id, parameter.id);
+          event.preventDefault();
+        } else if (event.key === " " || event.keyCode === 32) {
           selectParameter(parameter.id);
           event.preventDefault();
         }
@@ -873,6 +883,28 @@
     elements.deleteAlgorithm.disabled = !canMutate || !hasAlgorithm;
     elements.addParameter.disabled = !canMutate || !hasAlgorithm;
     elements.deleteParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
+    elements.editParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
+    elements.clearParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
+  }
+
+  function requestParameterEdit(action, algorithmId, parameterId) {
+    if (!state.workspace || !state.workspace.canExecute || !algorithmId || !parameterId) {
+      return;
+    }
+    emitBridgeEvent("EVENT_PARAMETER_EDIT_REQUESTED", {
+      sessionId: state.workspace.sessionId,
+      algorithmId: String(algorithmId),
+      parameterId: String(parameterId),
+      action: action
+    });
+  }
+
+  function editSelectedParameterFromUi(action) {
+    var algorithm = currentAlgorithm();
+    if (!algorithm || !state.selectedParameterId) {
+      return;
+    }
+    requestParameterEdit(action, algorithm.id, state.selectedParameterId);
   }
 
   function selectParameter(parameterId) {
@@ -2083,6 +2115,8 @@
     elements.deleteAlgorithm.addEventListener("click", deleteAlgorithmFromUi);
     elements.addParameter.addEventListener("click", addParameterFromUi);
     elements.deleteParameter.addEventListener("click", deleteParameterFromUi);
+    elements.editParameter.addEventListener("click", function () { editSelectedParameterFromUi("edit"); });
+    elements.clearParameter.addEventListener("click", function () { editSelectedParameterFromUi("clear"); });
     elements.dialogCancel.addEventListener("click", closeWorkbenchDialog);
     elements.dialogConfirm.addEventListener("click", confirmWorkbenchDialog);
     elements.dialogBackdrop.addEventListener("click", function (event) {
