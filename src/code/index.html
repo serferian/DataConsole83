@@ -27,11 +27,13 @@
         </div>
       </div>
       <div class="dc-search-row">
-        <input id="dataconsole-search" class="dc-search-input" type="text"
-          placeholder="Поиск по алгоритмам и коду" aria-label="Поиск по алгоритмам и коду"
-          autocomplete="off" spellcheck="false">
-        <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
-          aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+        <div id="dataconsole-search-control" class="dc-search-control">
+          <input id="dataconsole-search" class="dc-search-input" type="text"
+            placeholder="Найти алгоритм или код" aria-label="Найти алгоритм или код"
+            autocomplete="off" spellcheck="false">
+          <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
+            aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+        </div>
       </div>
       <div id="dataconsole-algorithm-tree" class="dc-tree" role="tree" aria-label="Алгоритмы"></div>
       <div id="dataconsole-search-empty" class="dc-search-empty" hidden>Ничего не найдено</div>

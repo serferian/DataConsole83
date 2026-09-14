@@ -8,6 +8,7 @@
     server: { className: "server", glyph: "S", title: "Код сервера", tabTitle: "Сервер", language: "bsl", order: 3 },
     background: { className: "background", glyph: "F", title: "Фоновый код", tabTitle: "Фон", language: "bsl", order: 4 }
   };
+  var DOCUMENT_KIND_ORDER = ["query", "before-query", "client", "server", "background"];
 
   var state = {
     workspace: null,
@@ -41,6 +42,7 @@
     elements.explorer = byId("dataconsole-explorer");
     elements.fileName = byId("dataconsole-file-name");
     elements.tree = byId("dataconsole-algorithm-tree");
+    elements.searchControl = byId("dataconsole-search-control");
     elements.search = byId("dataconsole-search");
     elements.searchClear = byId("dataconsole-search-clear");
     elements.searchEmpty = byId("dataconsole-search-empty");
@@ -285,12 +287,6 @@
     }
   }
 
-  function orderedDocuments(documents) {
-    return documents.slice().sort(function (left, right) {
-      return kindDescription(left.kind).order - kindDescription(right.kind).order;
-    });
-  }
-
   function activateDocumentFromUi(algorithmId, documentKind) {
     var result = activateDocumentInternal(algorithmId, documentKind, true);
     if (result && result.errorDescription) {
@@ -304,24 +300,32 @@
     group.setAttribute("role", "group");
     group.setAttribute("aria-label", "Документы алгоритма " + algorithm.name);
 
-    orderedDocuments(algorithm.documents).forEach(function (documentItem) {
-      var description = kindDescription(documentItem.kind);
+    DOCUMENT_KIND_ORDER.forEach(function (documentKind) {
+      var documentItem = algorithmDocumentByKind(algorithm, documentKind);
+      var description = kindDescription(documentKind);
       var button = document.createElement("button");
       button.type = "button";
-      button.className = "dc-tree-document-button dc-kind-" + description.className;
-      button.setAttribute("data-document-id", documentItem.id);
-      button.title = description.title;
-      button.setAttribute("aria-label", description.title);
+      button.className = "dc-tree-document-button dc-kind-" + description.className + (documentItem ? "" : " dc-document-unavailable");
+      button.disabled = !documentItem;
+      if (documentItem) {
+        button.setAttribute("data-document-id", documentItem.id);
+      }
+      button.title = documentItem ? description.title : description.title + ": документ недоступен";
+      button.setAttribute("aria-label", button.title);
       button.textContent = description.glyph;
-      button.addEventListener("click", function (event) {
-        if (event && event.stopPropagation) {
-          event.stopPropagation();
-        }
-        activateDocumentFromUi(algorithm.id, documentItem.kind);
-      });
-      state.documentButtons.set(documentItem.id, button);
+      if (documentItem) {
+        button.addEventListener("click", function (event) {
+          if (event && event.stopPropagation) {
+            event.stopPropagation();
+          }
+          activateDocumentFromUi(algorithm.id, documentItem.kind);
+        });
+        state.documentButtons.set(documentItem.id, button);
+      }
       group.appendChild(button);
-      updateDocumentButtonState(documentItem.id);
+      if (documentItem) {
+        updateDocumentButtonState(documentItem.id);
+      }
     });
     return group;
   }
@@ -891,6 +895,12 @@
 
   function initializeSearch() {
     elements.search.addEventListener("input", scheduleSearch);
+    elements.search.addEventListener("focus", function () {
+      elements.searchControl.classList.add("dc-focused");
+    });
+    elements.search.addEventListener("blur", function () {
+      elements.searchControl.classList.remove("dc-focused");
+    });
     elements.search.addEventListener("keydown", function (event) {
       if (event.key === "Escape" || event.keyCode === 27) {
         clearSearch();
