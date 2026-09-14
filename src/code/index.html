@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>BSL-editor</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <link href="./decorations.css" rel="stylesheet">
+  <link href="./tree/tree.css" rel="stylesheet">
+  <link href="./workbench.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <div id="dataconsole-workbench" class="dc-workbench">
+    <aside id="dataconsole-explorer" class="dc-explorer" aria-label="Проводник алгоритмов">
+      <div class="dc-explorer-header">
+        <div class="dc-explorer-heading">
+          <div class="dc-explorer-title">АЛГОРИТМЫ</div>
+          <div id="dataconsole-file-name" class="dc-file-name">Рабочая область не открыта</div>
+        </div>
+        <div class="dc-explorer-actions">
+          <button id="dataconsole-open-workspace" class="dc-icon-button" type="button"
+            aria-label="Открыть рабочую область" title="Открыть рабочую область">↗</button>
+          <button id="dataconsole-collapse-all" class="dc-icon-button" type="button"
+            aria-label="Свернуть все" title="Свернуть все">⇤</button>
+        </div>
+      </div>
+      <div id="dataconsole-algorithm-tree" class="dc-tree" role="tree" aria-label="Алгоритмы"></div>
+      <div id="dataconsole-explorer-empty" class="dc-explorer-empty">
+        <span class="dc-empty-kicker">Нет открытого файла</span>
+        <span>Откройте файл алгоритмов, чтобы начать работу.</span>
+        <button id="dataconsole-empty-open" type="button">Открыть файл</button>
+      </div>
+    </aside>
+
+    <div id="dataconsole-splitter" class="dc-splitter" role="separator" aria-label="Изменить ширину проводника"
+      aria-orientation="vertical" aria-valuemin="210" aria-valuemax="520" aria-valuenow="260" tabindex="0"></div>
+
+    <main id="dataconsole-editor-shell" class="dc-editor-shell">
+      <div id="container"></div>
+      <div id="dataconsole-editor-empty" class="dc-editor-empty" aria-live="polite">
+        <div class="dc-editor-empty-mark" aria-hidden="true">DC</div>
+        <div class="dc-editor-empty-title">DataConsole83</div>
+        <div class="dc-editor-empty-copy">Откройте рабочую область и выберите документ алгоритма.</div>
+      </div>
+      <div id="display">
+        <div id="display-header">
+          <div id="display-title"></div>
+          <div id="display-close"></div>
+        </div>
+        <div id="variables-display">
+          <div id="variables-tree"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <button id="event-button"></button>
+
+  <script>
+    function getCode() {
+      return
+      `	Для каждого рез Из Выгрузка Цикл
+		Для каждого топ Из ВыгрузкаДерево Цикл
+
+			//рез.ИДЛичногоЧатаБитрикс = топ.КоличествоОшибок;
+			//Прервать;
+		КонецЦикла;
+	КонецЦикла;
+`;
+    }
+  </script>
+  <script src="./vs/loader.js"></script>
+  <script src="./parsers.js"></script>
+  <script src="./finder.js"></script>
+  <script src="./bsl_helper.js"></script>
+  <script src="./init.js"></script>
+  <script src="./tree/tree.js"></script>
+  <script src="./workbench.js"></script>
+
+</body>
+
+</html>

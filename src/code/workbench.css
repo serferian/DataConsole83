@@ -1,0 +1,547 @@
+:root {
+  --dc-chrome: #f3f3f3;
+  --dc-chrome-raised: #ffffff;
+  --dc-editor-surface: #ffffff;
+  --dc-border: #d7d7d7;
+  --dc-text: #242424;
+  --dc-muted: #626262;
+  --dc-hover: #e8e8e8;
+  --dc-selected: #d6e6f5;
+  --dc-selected-edge: #4c86b6;
+  --dc-focus: #0e639c;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--dc-text);
+  background: var(--dc-editor-surface);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+html.dc-theme-dark {
+  --dc-chrome: #252526;
+  --dc-chrome-raised: #2d2d2d;
+  --dc-editor-surface: #1e1e1e;
+  --dc-border: #3c3c3c;
+  --dc-text: #e5e5e5;
+  --dc-muted: #b8b8b8;
+  --dc-hover: #2f2f30;
+  --dc-selected: #094771;
+  --dc-selected-edge: #75aadb;
+  --dc-focus: #75aadb;
+}
+
+.dc-workbench {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  background: var(--dc-editor-surface);
+}
+
+.dc-explorer {
+  display: flex;
+  flex: 0 0 260px;
+  flex-direction: column;
+  width: 260px;
+  min-width: 210px;
+  max-width: 520px;
+  min-height: 0;
+  overflow: hidden;
+  color: var(--dc-text);
+  background: var(--dc-chrome);
+}
+
+.dc-workbench.dc-sidebar-hidden .dc-explorer,
+.dc-workbench.dc-sidebar-hidden .dc-splitter {
+  display: none;
+}
+
+.dc-explorer-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  min-height: 50px;
+  padding: 9px 7px 8px 13px;
+  border-bottom: 1px solid var(--dc-border);
+  box-sizing: border-box;
+}
+
+.dc-explorer-heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dc-explorer-title {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: .08em;
+}
+
+.dc-file-name {
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--dc-muted);
+  font-size: 11px;
+  line-height: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dc-explorer-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  margin-left: 5px;
+}
+
+.dc-icon-button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--dc-text);
+  background: transparent;
+  font: 600 16px/24px "Segoe UI Symbol", "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+
+.dc-icon-button:hover {
+  background: var(--dc-hover);
+}
+
+.dc-icon-button:focus,
+.dc-tree button:focus,
+.dc-explorer-empty button:focus,
+.dc-splitter:focus {
+  outline: 1px solid var(--dc-focus);
+  outline-offset: -1px;
+}
+
+.dc-tree {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 5px 0 12px;
+  overflow: auto;
+}
+
+.dc-tree:empty {
+  display: none;
+}
+
+.dc-algorithm {
+  animation: dc-tree-reveal 140ms ease-out both;
+}
+
+.dc-algorithm-heading {
+  display: flex;
+  align-items: center;
+  min-height: 25px;
+  padding-right: 8px;
+}
+
+.dc-algorithm-heading:hover {
+  background: var(--dc-hover);
+}
+
+.dc-twistie {
+  position: relative;
+  flex: 0 0 20px;
+  align-self: stretch;
+  padding: 0;
+  border: 0;
+  color: var(--dc-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.dc-twistie::before {
+  display: inline-block;
+  content: "›";
+  font: 18px/20px "Segoe UI Symbol", "Segoe UI", Arial, sans-serif;
+  transform-origin: 50% 54%;
+  transition: transform 100ms ease;
+}
+
+.dc-twistie[aria-expanded="true"]::before {
+  transform: rotate(90deg);
+}
+
+.dc-twistie.dc-twistie-empty {
+  cursor: default;
+  visibility: hidden;
+}
+
+.dc-algorithm-icon {
+  position: relative;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 12px;
+  margin-right: 5px;
+  border: 1px solid #8a8a8a;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.dc-algorithm-icon::before {
+  position: absolute;
+  top: -4px;
+  left: 1px;
+  width: 7px;
+  height: 4px;
+  border: 1px solid #8a8a8a;
+  border-bottom: 0;
+  border-radius: 2px 2px 0 0;
+  background: var(--dc-chrome);
+  content: "";
+  box-sizing: border-box;
+}
+
+.dc-algorithm-icon.dc-algorithm-icon-code {
+  height: 15px;
+  border-color: #718190;
+  border-radius: 1px;
+}
+
+.dc-algorithm-icon.dc-algorithm-icon-code::before {
+  top: 2px;
+  left: 3px;
+  width: 7px;
+  height: 1px;
+  border: 0;
+  background: #718190;
+  box-shadow: 0 3px 0 #718190, 0 6px 0 #718190;
+}
+
+.dc-algorithm-name {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--dc-text);
+  font-size: 12px;
+  line-height: 21px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dc-algorithm-body[hidden] {
+  display: none;
+}
+
+.dc-document-rail {
+  position: relative;
+  margin: 1px 0 4px 27px;
+  padding: 2px 0 2px 8px;
+  border-left: 1px solid var(--dc-border);
+}
+
+.dc-document-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 27px;
+  padding: 2px 24px 2px 7px;
+  border: 0;
+  border-left: 2px solid transparent;
+  color: var(--dc-text);
+  background: transparent;
+  font: 12px/19px "Segoe UI", Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.dc-document-button:hover {
+  background: var(--dc-hover);
+}
+
+.dc-document-button.dc-active {
+  border-left-color: var(--dc-selected-edge);
+  background: var(--dc-selected);
+}
+
+.dc-document-glyph {
+  display: inline-flex;
+  flex: 0 0 18px;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: #8b641d;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  box-sizing: border-box;
+}
+
+.dc-kind-before .dc-document-glyph { color: #8b641d; border-style: dashed; }
+.dc-kind-client .dc-document-glyph { color: #15776f; }
+.dc-kind-server .dc-document-glyph { color: #7656a6; }
+.dc-kind-background .dc-document-glyph { color: #3976a8; }
+
+html.dc-theme-dark .dc-document-glyph { color: #d7a84d; }
+html.dc-theme-dark .dc-kind-before .dc-document-glyph { color: #d7a84d; }
+html.dc-theme-dark .dc-kind-client .dc-document-glyph { color: #4fc1b4; }
+html.dc-theme-dark .dc-kind-server .dc-document-glyph { color: #b69cdd; }
+html.dc-theme-dark .dc-kind-background .dc-document-glyph { color: #75aadb; }
+
+.dc-document-title {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dc-content-state {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border: 1px solid var(--dc-muted);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.dc-content-state.dc-has-content {
+  border-color: var(--dc-selected-edge);
+  background: var(--dc-selected-edge);
+}
+
+.dc-parameters {
+  margin: 2px 8px 6px 36px;
+}
+
+.dc-parameters-title {
+  padding: 4px 5px 3px;
+  color: var(--dc-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.dc-parameter {
+  display: grid;
+  grid-template-columns: minmax(72px, .8fr) minmax(86px, 1.2fr);
+  width: 100%;
+  min-height: 25px;
+  padding: 3px 5px;
+  border: 1px solid transparent;
+  color: var(--dc-text);
+  background: transparent;
+  font: 11px/17px "Segoe UI", Arial, sans-serif;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+button.dc-parameter {
+  cursor: pointer;
+}
+
+button.dc-parameter:hover {
+  border-color: var(--dc-border);
+  background: var(--dc-chrome-raised);
+}
+
+.dc-parameter-name,
+.dc-parameter-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dc-parameter-name {
+  color: var(--dc-muted);
+}
+
+.dc-parameter-value {
+  color: var(--dc-text);
+}
+
+.dc-parameter-value::before {
+  margin-right: 5px;
+  color: var(--dc-muted);
+  content: "=";
+}
+
+.dc-children {
+  margin-left: 12px;
+}
+
+.dc-explorer-empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--dc-muted);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.dc-explorer-empty[hidden] {
+  display: none;
+}
+
+.dc-empty-kicker {
+  color: var(--dc-text);
+  font-weight: 600;
+}
+
+.dc-explorer-empty button {
+  margin-top: 4px;
+  padding: 5px 10px;
+  border: 1px solid var(--dc-focus);
+  border-radius: 2px;
+  color: #ffffff;
+  background: #0e639c;
+  font: 12px/18px "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+
+.dc-splitter {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 4px;
+  width: 4px;
+  margin-left: -2px;
+  border-left: 1px solid var(--dc-border);
+  cursor: col-resize;
+  box-sizing: border-box;
+}
+
+.dc-splitter::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1px;
+  width: 2px;
+  background: var(--dc-focus);
+  content: "";
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.dc-splitter:hover::after,
+.dc-splitter:focus::after,
+body.dc-resizing .dc-splitter::after {
+  opacity: 1;
+}
+
+body.dc-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.dc-editor-shell {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--dc-editor-surface);
+}
+
+#container {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+#display {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.dc-editor-empty {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  color: var(--dc-muted);
+  background: var(--dc-editor-surface);
+  pointer-events: none;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.dc-editor-empty[hidden] {
+  display: none;
+}
+
+.dc-editor-empty-mark {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 13px;
+  border: 1px solid var(--dc-border);
+  border-left: 3px solid var(--dc-selected-edge);
+  color: var(--dc-selected-edge);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 38px;
+  letter-spacing: .08em;
+}
+
+.dc-editor-empty-title {
+  margin-bottom: 5px;
+  color: var(--dc-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dc-editor-empty-copy {
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+#event-button {
+  position: fixed;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+@keyframes dc-tree-reveal {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-algorithm,
+  .dc-twistie::before,
+  .dc-splitter::after {
+    animation: none;
+    transition: none;
+  }
+}
