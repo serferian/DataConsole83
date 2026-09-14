@@ -89,6 +89,18 @@
         <div id="dataconsole-background-settings" class="dc-background-settings"
           aria-label="Настройки фонового выполнения" hidden></div>
         <div id="dataconsole-action-note" class="dc-action-note"></div>
+        <div id="dataconsole-parameter-hint-control" class="dc-parameter-hint-control" hidden>
+          <button id="dataconsole-toggle-parameter-hint" class="dc-parameter-hint-toggle" type="button"
+            aria-label="Показать параметры среды выполнения" aria-controls="dataconsole-parameter-hint"
+            aria-expanded="false" aria-pressed="false" title="Параметры среды выполнения">
+            <span class="dc-parameter-hint-glyph" aria-hidden="true">?</span>
+            <span class="dc-parameter-hint-toggle-label">Параметры кода</span>
+          </button>
+        </div>
+        <section id="dataconsole-parameter-hint" class="dc-parameter-hint"
+          aria-label="Параметры среды выполнения" aria-live="polite" hidden>
+          <div id="dataconsole-parameter-hint-items" class="dc-parameter-hint-items"></div>
+        </section>
       </div>
       <div class="dc-work-area">
         <section class="dc-editor-pane">

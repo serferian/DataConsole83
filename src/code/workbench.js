@@ -67,6 +67,7 @@
     sidebarVisible: true,
     parametersVisible: true,
     settingsVisible: false,
+    parameterHint: { documentId: "", visible: false, items: [] },
     sidebarWidth: 260,
     parametersWidth: 280
   };
@@ -102,6 +103,10 @@
     elements.actions = byId("dataconsole-actions");
     elements.backgroundSettings = byId("dataconsole-background-settings");
     elements.actionNote = byId("dataconsole-action-note");
+    elements.parameterHintControl = byId("dataconsole-parameter-hint-control");
+    elements.toggleParameterHint = byId("dataconsole-toggle-parameter-hint");
+    elements.parameterHint = byId("dataconsole-parameter-hint");
+    elements.parameterHintItems = byId("dataconsole-parameter-hint-items");
     elements.parameters = byId("dataconsole-parameters");
     elements.parametersSplitter = byId("dataconsole-parameters-splitter");
     elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
@@ -236,6 +241,22 @@
       name: String(rawTable.name || "Результат"),
       rowCount: isFinite(rowCount) ? rowCount : 0,
       duration: isFinite(duration) ? duration : 0
+    };
+  }
+
+  function normalizeParameterHintItem(rawItem, fieldName) {
+    if (!rawItem || typeof rawItem !== "object") {
+      throw new Error("Элемент " + fieldName + " должен быть объектом.");
+    }
+    var level = Number(rawItem.level || 0);
+    if (!isFinite(level) || level < 0) {
+      level = 0;
+    }
+    return {
+      name: String(rawItem.name || ""),
+      typeName: String(rawItem.typeName || ""),
+      description: String(rawItem.description || ""),
+      level: Math.min(3, Math.floor(level))
     };
   }
 
@@ -623,10 +644,45 @@
   }
 
   function requestCommand(documentItem, action, additional) {
-    if (!documentItem || !state.workspace || !state.workspace.canExecute) {
+    if (!documentItem || !state.workspace
+        || (!state.workspace.canExecute && action !== "toggle-parameter-hint")) {
       return;
     }
     emitBridgeEvent("EVENT_COMMAND_REQUESTED", commandPayload(documentItem, action, additional));
+  }
+
+  function renderParameterHint(activeDocument) {
+    while (elements.parameterHintItems.firstChild) {
+      elements.parameterHintItems.removeChild(elements.parameterHintItems.firstChild);
+    }
+    var supported = Boolean(activeDocument
+      && ["beforequery", "client", "server", "background"].indexOf(normalizedKind(activeDocument.kind)) >= 0);
+    var matchesDocument = supported && state.parameterHint.documentId === activeDocument.id;
+    var visible = Boolean(matchesDocument && state.parameterHint.visible);
+
+    elements.parameterHintControl.hidden = !supported;
+    elements.toggleParameterHint.setAttribute("aria-pressed", visible ? "true" : "false");
+    elements.toggleParameterHint.setAttribute("aria-expanded", visible ? "true" : "false");
+    elements.toggleParameterHint.setAttribute("aria-label", visible
+      ? "Скрыть параметры среды выполнения"
+      : "Показать параметры среды выполнения");
+    elements.toggleParameterHint.title = visible
+      ? "Скрыть параметры среды выполнения"
+      : "Показать параметры среды выполнения";
+    elements.parameterHint.hidden = !visible;
+    elements.actionBar.classList.toggle("dc-parameter-hint-visible", visible);
+
+    if (!visible) {
+      return;
+    }
+    state.parameterHint.items.forEach(function (item) {
+      var row = document.createElement("div");
+      row.className = "dc-parameter-hint-item dc-parameter-hint-level-" + item.level;
+      appendTextElement(row, "span", "dc-parameter-hint-name", item.name);
+      appendTextElement(row, "span", "dc-parameter-hint-type", item.typeName);
+      appendTextElement(row, "span", "dc-parameter-hint-description", item.description);
+      elements.parameterHintItems.appendChild(row);
+    });
   }
 
   function appendBackgroundSettingLabel(text, control) {
@@ -699,6 +755,7 @@
     elements.actionBar.hidden = !activeDocument;
     if (!activeDocument) {
       renderBackgroundSettings(null);
+      renderParameterHint(null);
       return;
     }
 
@@ -730,6 +787,7 @@
       elements.actions.appendChild(button);
     });
     renderBackgroundSettings(activeDocument);
+    renderParameterHint(activeDocument);
 
     if (normalizedKind(activeDocument.kind) === "beforequery") {
       elements.actionNote.textContent = "Код выполнится перед запросом";
@@ -1549,6 +1607,7 @@
       state.selectedAlgorithmId = null;
       state.selectedParameterId = null;
       state.selectedTableId = state.workspace.selectedTableId || null;
+      state.parameterHint = { documentId: "", visible: false, items: [] };
 
       state.suppressContentEvents = true;
       try {
@@ -1684,6 +1743,18 @@
         operation.normalizedSettings = normalizeSettings(operation.settings);
         return;
       }
+      if (operation.op === "replaceParameterHint") {
+        var hintDocumentId = requiredIdentity(operation.documentId, "operation.documentId");
+        if (!state.documents.has(hintDocumentId)) {
+          throw new Error("Документ не найден: " + hintDocumentId + ".");
+        }
+        operation.normalizedItems = asArray(operation.items, "operation.items").map(function (rawItem) {
+          return normalizeParameterHintItem(rawItem, "operation.items");
+        });
+        operation.normalizedDocumentId = hintDocumentId;
+        operation.normalizedVisible = Boolean(operation.visible);
+        return;
+      }
       throw new Error("Неподдерживаемая операция patch: " + String(operation.op) + ".");
     });
     return operations;
@@ -1762,6 +1833,12 @@
           state.selectedTableId = operation.selectedTableId || null;
         } else if (operation.op === "replaceSettings") {
           state.workspace.settings = operation.normalizedSettings;
+        } else if (operation.op === "replaceParameterHint") {
+          state.parameterHint = {
+            documentId: operation.normalizedDocumentId,
+            visible: operation.normalizedVisible,
+            items: operation.normalizedItems
+          };
         }
       });
       var parametersChanged = operations.some(function (operation) {
@@ -1769,6 +1846,7 @@
       });
       var tablesChanged = operations.some(function (operation) { return operation.op === "replaceTables"; });
       var settingsChanged = operations.some(function (operation) { return operation.op === "replaceSettings"; });
+      var parameterHintChanged = operations.some(function (operation) { return operation.op === "replaceParameterHint"; });
       if (state.searchQuery) {
         renderWorkspace();
       } else if (parametersChanged) {
@@ -1785,6 +1863,10 @@
         var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
         var activeAlgorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
         renderActionBar(activeAlgorithm, activeDocument);
+      }
+      if (parameterHintChanged && !settingsChanged) {
+        var hintActiveDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+        renderParameterHint(hintActiveDocument);
       }
       return { success: true, applied: operations.length };
     } catch (error) {
@@ -2299,6 +2381,10 @@
     initializeTableControls();
     initializeSettingsControls();
     initializeModeTabs();
+    elements.toggleParameterHint.addEventListener("click", function () {
+      var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+      requestCommand(activeDocument, "toggle-parameter-hint");
+    });
     initializeSplitter();
     initializeParametersSplitter();
     renderWorkspace();

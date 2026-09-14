@@ -608,6 +608,11 @@ body.dc-resizing {
 }
 
 .dc-action-bar[hidden] { display: none; }
+.dc-action-bar.dc-parameter-hint-visible {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  height: auto;
+}
 .dc-actions { display: flex; flex: 0 1 auto; min-width: 0; gap: 5px; }
 
 .dc-command-button,
@@ -656,6 +661,76 @@ body.dc-resizing {
 
 .dc-command-stop:hover:not(:disabled) { border-color: #a1260d; color: #a1260d; }
 .dc-action-note { overflow: hidden; margin-left: 10px; color: var(--dc-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.dc-parameter-hint-control {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 8px;
+}
+.dc-parameter-hint-control[hidden] { display: none; }
+.dc-parameter-hint-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--dc-muted);
+  background: transparent;
+  font: 11px/26px "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+}
+.dc-parameter-hint-toggle:hover { color: var(--dc-text); background: var(--dc-hover); }
+.dc-parameter-hint-toggle:focus { outline: 1px solid var(--dc-focus); outline-offset: 1px; }
+.dc-parameter-hint-toggle[aria-pressed="true"] {
+  border-color: var(--dc-selected-edge);
+  color: var(--dc-text);
+  background: var(--dc-selected);
+}
+.dc-parameter-hint-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font: 700 10px/1 "Segoe UI", Arial, sans-serif;
+}
+.dc-parameter-hint {
+  flex: 1 0 100%;
+  min-width: 0;
+  margin: 4px -8px -4px;
+  padding: 5px 10px 6px;
+  border-top: 1px solid var(--dc-border);
+  background: var(--dc-search-surface);
+  box-sizing: border-box;
+}
+.dc-parameter-hint[hidden] { display: none; }
+.dc-parameter-hint-items { display: flex; flex-wrap: wrap; gap: 3px 18px; }
+.dc-parameter-hint-item {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) minmax(100px, auto) minmax(180px, 1fr);
+  flex: 1 1 420px;
+  align-items: baseline;
+  min-width: 0;
+  color: var(--dc-text);
+  font-size: 11px;
+  line-height: 17px;
+}
+.dc-parameter-hint-item.dc-parameter-hint-level-1 { padding-left: 16px; }
+.dc-parameter-hint-name {
+  overflow: hidden;
+  padding-right: 10px;
+  color: var(--dc-selected-edge);
+  font: 600 11px/17px Consolas, "Courier New", monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dc-parameter-hint-type { padding-right: 10px; color: var(--dc-muted); white-space: nowrap; }
+.dc-parameter-hint-description { min-width: 0; color: var(--dc-text); }
 
 .dc-background-settings {
   display: flex;
@@ -692,6 +767,9 @@ body.dc-resizing {
   .dc-actions { gap: 2px; }
   .dc-background-settings { margin-left: 4px; padding-left: 4px; gap: 5px; }
   .dc-background-setting-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .dc-parameter-hint-toggle-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .dc-parameter-hint-glyph { margin-right: 0; }
+  .dc-parameter-hint-item { grid-template-columns: minmax(110px, auto) minmax(90px, auto) minmax(160px, 1fr); }
 }
 
 .dc-work-area {
