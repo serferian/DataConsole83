@@ -154,6 +154,7 @@
                 aria-label="Закрыть настройки" title="Закрыть настройки">×</button>
             </div>
             <div class="dc-settings-content">
+              <div class="dc-settings-subtitle">ОБРАБОТКА</div>
               <label class="dc-settings-field" for="dataconsole-source-directory">
                 <span>Каталог исходного кода конфигурации</span>
               </label>
@@ -183,6 +184,47 @@
               <div id="dataconsole-saved-list-limit-note" class="dc-settings-note">
                 Ноль использует стандартный предел — 1000 элементов.
               </div>
+              <div class="dc-settings-subtitle dc-settings-editor-subtitle">РЕДАКТОР MONACO</div>
+              <label class="dc-settings-field" for="dataconsole-editor-theme">
+                <span>Тема</span>
+                <select id="dataconsole-editor-theme" class="dc-settings-input">
+                  <option value="light">Светлая</option>
+                  <option value="dark">Тёмная</option>
+                </select>
+              </label>
+              <label class="dc-settings-field" for="dataconsole-editor-font-size">
+                <span>Размер шрифта, px</span>
+                <input id="dataconsole-editor-font-size" class="dc-settings-input" type="number"
+                  min="10" max="28" step="1" inputmode="numeric">
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-line-numbers">
+                <input id="dataconsole-editor-line-numbers" type="checkbox">
+                <span>Номера строк</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-minimap">
+                <input id="dataconsole-editor-minimap" type="checkbox">
+                <span>Карта кода</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-word-wrap">
+                <input id="dataconsole-editor-word-wrap" type="checkbox">
+                <span>Перенос длинных строк</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-render-whitespace">
+                <input id="dataconsole-editor-render-whitespace" type="checkbox">
+                <span>Показывать пробелы и табуляции</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-quick-suggestions">
+                <input id="dataconsole-editor-quick-suggestions" type="checkbox">
+                <span>Быстрые подсказки</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-status-bar">
+                <input id="dataconsole-editor-status-bar" type="checkbox">
+                <span>Строка состояния</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-query-highlighting">
+                <input id="dataconsole-editor-query-highlighting" type="checkbox">
+                <span>Подсветка синтаксиса запросов</span>
+              </label>
             </div>
           </section>
         </aside>

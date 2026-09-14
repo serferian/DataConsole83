@@ -110,6 +110,15 @@
     elements.loadCommonModules = byId("dataconsole-load-common-modules");
     elements.variableDisplayMode = byId("dataconsole-variable-display-mode");
     elements.savedListLimit = byId("dataconsole-saved-list-limit");
+    elements.editorTheme = byId("dataconsole-editor-theme");
+    elements.editorFontSize = byId("dataconsole-editor-font-size");
+    elements.editorLineNumbers = byId("dataconsole-editor-line-numbers");
+    elements.editorMinimap = byId("dataconsole-editor-minimap");
+    elements.editorWordWrap = byId("dataconsole-editor-word-wrap");
+    elements.editorRenderWhitespace = byId("dataconsole-editor-render-whitespace");
+    elements.editorQuickSuggestions = byId("dataconsole-editor-quick-suggestions");
+    elements.editorStatusBar = byId("dataconsole-editor-status-bar");
+    elements.editorQueryHighlighting = byId("dataconsole-editor-query-highlighting");
     elements.splitter = byId("dataconsole-splitter");
     elements.dialogBackdrop = byId("dataconsole-dialog-backdrop");
     elements.dialogTitle = byId("dataconsole-dialog-title");
@@ -223,20 +232,36 @@
 
   function normalizeSettings(rawSettings) {
     var source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
+    var editorSource = source.editor && typeof source.editor === "object" ? source.editor : {};
     var variableDisplayMode = Number(source.variableDisplayMode || 0);
     var savedListLimit = Number(source.savedListLimit || 0);
+    var fontSize = Number(editorSource.fontSize === undefined ? 14 : editorSource.fontSize);
     if (variableDisplayMode < 0 || variableDisplayMode > 2 || !isFinite(variableDisplayMode)) {
       variableDisplayMode = 0;
     }
     if (savedListLimit < 0 || savedListLimit > 9999 || !isFinite(savedListLimit)) {
       savedListLimit = 0;
     }
+    if (fontSize < 10 || fontSize > 28 || !isFinite(fontSize)) {
+      fontSize = 14;
+    }
     return {
       sourceDirectory: source.sourceDirectory === undefined || source.sourceDirectory === null
         ? ""
         : String(source.sourceDirectory),
       variableDisplayMode: Math.floor(variableDisplayMode),
-      savedListLimit: Math.floor(savedListLimit)
+      savedListLimit: Math.floor(savedListLimit),
+      editor: {
+        theme: editorSource.theme === "dark" ? "dark" : "light",
+        fontSize: Math.floor(fontSize),
+        lineNumbers: editorSource.lineNumbers === undefined ? true : Boolean(editorSource.lineNumbers),
+        minimap: editorSource.minimap === undefined ? false : Boolean(editorSource.minimap),
+        wordWrap: editorSource.wordWrap === undefined ? false : Boolean(editorSource.wordWrap),
+        renderWhitespace: editorSource.renderWhitespace === undefined ? false : Boolean(editorSource.renderWhitespace),
+        quickSuggestions: editorSource.quickSuggestions === undefined ? true : Boolean(editorSource.quickSuggestions),
+        statusBar: editorSource.statusBar === undefined ? false : Boolean(editorSource.statusBar),
+        queryHighlighting: editorSource.queryHighlighting === undefined ? false : Boolean(editorSource.queryHighlighting)
+      }
     };
   }
 
@@ -797,32 +822,81 @@
     });
   }
 
-  function settingsCommandPayload(action, value) {
-    return {
+  function settingsCommandPayload(action, value, name) {
+    var payload = {
       sessionId: state.workspace ? state.workspace.sessionId : "",
       action: action,
       value: value === undefined || value === null ? "" : value
     };
+    if (name) {
+      payload.name = name;
+    }
+    return payload;
   }
 
-  function requestSettingsCommand(action, value) {
+  function requestSettingsCommand(action, value, name) {
     if (!state.workspace) {
       return;
     }
-    emitBridgeEvent("EVENT_SETTINGS_COMMAND_REQUESTED", settingsCommandPayload(action, value));
+    emitBridgeEvent("EVENT_SETTINGS_COMMAND_REQUESTED", settingsCommandPayload(action, value, name));
+  }
+
+  function requestEditorSetting(name, value) {
+    requestSettingsCommand("set-editor-option", value, name);
+  }
+
+  function applyEditorSettings(settings) {
+    if (!state.editor || !settings) {
+      return;
+    }
+    state.editor.updateOptions({
+      fontSize: settings.fontSize,
+      lineNumbers: settings.lineNumbers ? "on" : "off",
+      minimap: { enabled: settings.minimap },
+      wordWrap: settings.wordWrap ? "on" : "off",
+      renderWhitespace: settings.renderWhitespace ? "all" : "none",
+      quickSuggestions: settings.quickSuggestions
+    });
+    if (window.monaco && window.monaco.editor) {
+      window.monaco.editor.setTheme("bsl-" + settings.theme + (settings.queryHighlighting ? "-query" : ""));
+    }
+    if (settings.statusBar && typeof window.showStatusBar === "function") {
+      window.showStatusBar();
+    } else if (!settings.statusBar && typeof window.hideStatusBar === "function") {
+      window.hideStatusBar();
+    }
   }
 
   function renderSettingsPanel() {
     var settings = state.workspace ? state.workspace.settings : normalizeSettings(null);
+    var editorSettings = settings.editor;
     var canChange = Boolean(state.workspace);
     elements.sourceDirectory.value = settings.sourceDirectory;
     elements.variableDisplayMode.value = String(settings.variableDisplayMode);
     elements.savedListLimit.value = String(settings.savedListLimit);
+    elements.editorTheme.value = editorSettings.theme;
+    elements.editorFontSize.value = String(editorSettings.fontSize);
+    elements.editorLineNumbers.checked = editorSettings.lineNumbers;
+    elements.editorMinimap.checked = editorSettings.minimap;
+    elements.editorWordWrap.checked = editorSettings.wordWrap;
+    elements.editorRenderWhitespace.checked = editorSettings.renderWhitespace;
+    elements.editorQuickSuggestions.checked = editorSettings.quickSuggestions;
+    elements.editorStatusBar.checked = editorSettings.statusBar;
+    elements.editorQueryHighlighting.checked = editorSettings.queryHighlighting;
     elements.sourceDirectory.disabled = !canChange;
     elements.chooseSourceDirectory.disabled = !canChange;
     elements.loadCommonModules.disabled = !canChange;
     elements.variableDisplayMode.disabled = !canChange;
     elements.savedListLimit.disabled = !canChange;
+    elements.editorTheme.disabled = !canChange;
+    elements.editorFontSize.disabled = !canChange;
+    elements.editorLineNumbers.disabled = !canChange;
+    elements.editorMinimap.disabled = !canChange;
+    elements.editorWordWrap.disabled = !canChange;
+    elements.editorRenderWhitespace.disabled = !canChange;
+    elements.editorQuickSuggestions.disabled = !canChange;
+    elements.editorStatusBar.disabled = !canChange;
+    elements.editorQueryHighlighting.disabled = !canChange;
   }
 
   function setSettingsVisible(visible) {
@@ -1406,6 +1480,7 @@
         state.searchExpandedAlgorithms = new Map();
       }
       renderWorkspace();
+      applyEditorSettings(state.workspace.settings.editor);
 
       if (nextDocument) {
         activateDocumentById(nextDocument.id, false);
@@ -1604,6 +1679,7 @@
       }
       if (settingsChanged) {
         renderSettingsPanel();
+        applyEditorSettings(state.workspace.settings.editor);
       }
       return { success: true, applied: operations.length };
     } catch (error) {
@@ -1824,6 +1900,35 @@
       elements.savedListLimit.value = String(value);
       requestSettingsCommand("set-saved-list-limit", value);
     });
+    elements.editorTheme.addEventListener("change", function () {
+      requestEditorSetting("theme", elements.editorTheme.value);
+    });
+    elements.editorFontSize.addEventListener("change", function () {
+      var value = Math.max(10, Math.min(28, Math.floor(Number(elements.editorFontSize.value) || 14)));
+      elements.editorFontSize.value = String(value);
+      requestEditorSetting("fontSize", value);
+    });
+    elements.editorLineNumbers.addEventListener("change", function () {
+      requestEditorSetting("lineNumbers", elements.editorLineNumbers.checked);
+    });
+    elements.editorMinimap.addEventListener("change", function () {
+      requestEditorSetting("minimap", elements.editorMinimap.checked);
+    });
+    elements.editorWordWrap.addEventListener("change", function () {
+      requestEditorSetting("wordWrap", elements.editorWordWrap.checked);
+    });
+    elements.editorRenderWhitespace.addEventListener("change", function () {
+      requestEditorSetting("renderWhitespace", elements.editorRenderWhitespace.checked);
+    });
+    elements.editorQuickSuggestions.addEventListener("change", function () {
+      requestEditorSetting("quickSuggestions", elements.editorQuickSuggestions.checked);
+    });
+    elements.editorStatusBar.addEventListener("change", function () {
+      requestEditorSetting("statusBar", elements.editorStatusBar.checked);
+    });
+    elements.editorQueryHighlighting.addEventListener("change", function () {
+      requestEditorSetting("queryHighlighting", elements.editorQueryHighlighting.checked);
+    });
   }
 
   function enabledModeTabs() {
@@ -2024,6 +2129,9 @@
       }
     }
     if (state.editor) {
+      if (state.workspace) {
+        applyEditorSettings(state.workspace.settings.editor);
+      }
       state.editor.layout();
       if (state.editor._themeService && state.editor._themeService.getTheme) {
         syncTheme(state.editor._themeService.getTheme().themeName);
