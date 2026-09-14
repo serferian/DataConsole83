@@ -608,7 +608,7 @@ body.dc-resizing {
 }
 
 .dc-action-bar[hidden] { display: none; }
-.dc-actions { display: flex; flex: 0 0 auto; gap: 5px; }
+.dc-actions { display: flex; flex: 0 1 auto; min-width: 0; gap: 5px; }
 
 .dc-command-button,
 .dc-fill-parameters {
@@ -634,6 +634,9 @@ body.dc-resizing {
 .dc-fill-parameters:disabled { cursor: default; opacity: .45; }
 .dc-command-primary { border-color: #0e639c; color: #ffffff; background: #0e639c; }
 .dc-command-primary:hover:not(:disabled) { border-color: #1177bb; background: #1177bb; }
+.dc-command-snippet { border-color: transparent; background: transparent; }
+.dc-command-snippet::before { content: "<>"; margin-right: 5px; color: var(--dc-muted); font: 10px/1 Consolas, monospace; }
+.dc-command-snippet:hover:not(:disabled)::before { color: var(--dc-text); }
 
 .dc-command-play {
   width: 0;
@@ -653,6 +656,43 @@ body.dc-resizing {
 
 .dc-command-stop:hover:not(:disabled) { border-color: #a1260d; color: #a1260d; }
 .dc-action-note { overflow: hidden; margin-left: 10px; color: var(--dc-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+.dc-background-settings {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--dc-border);
+  gap: 8px;
+}
+.dc-background-settings[hidden] { display: none; }
+.dc-background-setting { display: inline-flex; align-items: center; gap: 4px; color: var(--dc-muted); font-size: 11px; white-space: nowrap; }
+.dc-background-number,
+.dc-background-output {
+  width: 40px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid var(--dc-border);
+  border-radius: 2px;
+  color: var(--dc-text);
+  background: var(--dc-search-surface);
+  font: 11px/22px "Segoe UI", Arial, sans-serif;
+  text-align: right;
+  box-sizing: border-box;
+}
+.dc-background-output { display: inline-block; overflow: hidden; text-overflow: ellipsis; }
+.dc-background-number:focus,
+.dc-background-checkbox:focus { outline: 1px solid var(--dc-focus); outline-offset: 1px; }
+.dc-background-checkbox { width: 14px; height: 14px; margin: 0; accent-color: var(--dc-focus); }
+
+@media (max-width: 900px) {
+  .dc-command-button { padding-right: 6px; padding-left: 6px; }
+  .dc-actions { gap: 2px; }
+  .dc-background-settings { margin-left: 4px; padding-left: 4px; gap: 5px; }
+  .dc-background-setting-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
 
 .dc-work-area {
   display: flex;

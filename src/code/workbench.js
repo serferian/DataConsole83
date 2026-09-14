@@ -13,20 +13,28 @@
     query: [
       { action: "execute-query", label: "Выполнить", primary: true },
       { action: "execute-query-to-cursor", label: "До курсора" },
-      { action: "execute-query-package", label: "Пакет" }
+      { action: "execute-query-package", label: "Пакет" },
+      { action: "format-query", label: "Форматировать", snippet: true },
+      { action: "get-query-code", label: "Код запроса", snippet: true }
     ],
     beforequery: [
       { action: "execute-query", label: "Выполнить запрос", primary: true }
     ],
     client: [
-      { action: "execute-client", label: "Выполнить на клиенте", primary: true }
+      { action: "execute-client", label: "Выполнить на клиенте", primary: true },
+      { action: "insert-iteration-example", label: "Пример обхода", snippet: true },
+      { action: "insert-list-load-example", label: "Загрузка в список", snippet: true }
     ],
     server: [
-      { action: "execute-server", label: "Выполнить на сервере", primary: true }
+      { action: "execute-server", label: "Выполнить на сервере", primary: true },
+      { action: "insert-iteration-example", label: "Пример обхода", snippet: true },
+      { action: "insert-list-load-example", label: "Загрузка в список", snippet: true },
+      { action: "insert-storage-example", label: "Из хранилища", snippet: true }
     ],
     background: [
       { action: "execute-background", label: "Выполнить в фоне", primary: true },
-      { action: "stop-background", label: "Остановить", stop: true }
+      { action: "stop-background", label: "Остановить", stop: true },
+      { action: "insert-background-example", label: "Пример фонового кода", snippet: true }
     ]
   };
 
@@ -92,6 +100,7 @@
     elements.toggleSettings = byId("dataconsole-toggle-settings");
     elements.actionBar = byId("dataconsole-action-bar");
     elements.actions = byId("dataconsole-actions");
+    elements.backgroundSettings = byId("dataconsole-background-settings");
     elements.actionNote = byId("dataconsole-action-note");
     elements.parameters = byId("dataconsole-parameters");
     elements.parametersSplitter = byId("dataconsole-parameters-splitter");
@@ -233,9 +242,12 @@
   function normalizeSettings(rawSettings) {
     var source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
     var editorSource = source.editor && typeof source.editor === "object" ? source.editor : {};
+    var backgroundSource = source.background && typeof source.background === "object" ? source.background : {};
     var variableDisplayMode = Number(source.variableDisplayMode || 0);
     var savedListLimit = Number(source.savedListLimit || 0);
     var fontSize = Number(editorSource.fontSize === undefined ? 14 : editorSource.fontSize);
+    var backgroundJobCount = Number(backgroundSource.jobCount === undefined ? 1 : backgroundSource.jobCount);
+    var backgroundBatchSize = Number(backgroundSource.batchSize || 0);
     if (variableDisplayMode < 0 || variableDisplayMode > 2 || !isFinite(variableDisplayMode)) {
       variableDisplayMode = 0;
     }
@@ -245,12 +257,23 @@
     if (fontSize < 10 || fontSize > 28 || !isFinite(fontSize)) {
       fontSize = 14;
     }
+    if (backgroundJobCount < 1 || backgroundJobCount > 10 || !isFinite(backgroundJobCount)) {
+      backgroundJobCount = 1;
+    }
+    if (backgroundBatchSize < 0 || !isFinite(backgroundBatchSize)) {
+      backgroundBatchSize = 0;
+    }
     return {
       sourceDirectory: source.sourceDirectory === undefined || source.sourceDirectory === null
         ? ""
         : String(source.sourceDirectory),
       variableDisplayMode: Math.floor(variableDisplayMode),
       savedListLimit: Math.floor(savedListLimit),
+      background: {
+        jobCount: Math.floor(backgroundJobCount),
+        batchSize: Math.floor(backgroundBatchSize),
+        safeMode: backgroundSource.safeMode === undefined ? true : Boolean(backgroundSource.safeMode)
+      },
       editor: {
         theme: editorSource.theme === "dark" ? "dark" : "light",
         fontSize: Math.floor(fontSize),
@@ -585,21 +608,87 @@
     renderParametersPanel(algorithm, activeDocument);
   }
 
-  function commandPayload(documentItem, action) {
-    return {
+  function commandPayload(documentItem, action, additional) {
+    var payload = {
       sessionId: state.workspace ? state.workspace.sessionId : "",
       algorithmId: documentItem.algorithmId,
       documentId: documentItem.id,
       documentKind: documentItem.kind,
       action: action
     };
+    Object.keys(additional || {}).forEach(function (key) {
+      payload[key] = additional[key];
+    });
+    return payload;
   }
 
-  function requestCommand(documentItem, action) {
+  function requestCommand(documentItem, action, additional) {
     if (!documentItem || !state.workspace || !state.workspace.canExecute) {
       return;
     }
-    emitBridgeEvent("EVENT_COMMAND_REQUESTED", commandPayload(documentItem, action));
+    emitBridgeEvent("EVENT_COMMAND_REQUESTED", commandPayload(documentItem, action, additional));
+  }
+
+  function appendBackgroundSettingLabel(text, control) {
+    var label = document.createElement("label");
+    label.className = "dc-background-setting";
+    appendTextElement(label, "span", "dc-background-setting-label", text);
+    label.appendChild(control);
+    elements.backgroundSettings.appendChild(label);
+  }
+
+  function renderBackgroundSettings(activeDocument) {
+    while (elements.backgroundSettings.firstChild) {
+      elements.backgroundSettings.removeChild(elements.backgroundSettings.firstChild);
+    }
+    var visible = Boolean(activeDocument && normalizedKind(activeDocument.kind) === "background");
+    elements.backgroundSettings.hidden = !visible;
+    if (!visible) {
+      return;
+    }
+
+    var settings = state.workspace.settings.background;
+    var jobCount = document.createElement("input");
+    jobCount.type = "number";
+    jobCount.className = "dc-background-number";
+    jobCount.min = "1";
+    jobCount.max = "10";
+    jobCount.step = "1";
+    jobCount.value = String(settings.jobCount);
+    jobCount.disabled = !state.workspace.canExecute;
+    jobCount.title = "Количество фоновых заданий (от 1 до 10)";
+    jobCount.setAttribute("aria-label", "Количество фоновых заданий");
+    jobCount.addEventListener("change", function () {
+      var value = Math.max(1, Math.min(10, Math.floor(Number(jobCount.value) || 1)));
+      jobCount.value = String(value);
+      requestCommand(activeDocument, "update-background-setting", {
+        settingName: "jobCount",
+        settingValue: value
+      });
+    });
+    appendBackgroundSettingLabel("Заданий", jobCount);
+
+    var batchSize = document.createElement("output");
+    batchSize.className = "dc-background-output";
+    batchSize.textContent = String(settings.batchSize);
+    batchSize.title = "Расчётная порция данных на одно задание";
+    batchSize.setAttribute("aria-label", "Порция данных: " + settings.batchSize);
+    appendBackgroundSettingLabel("Порция", batchSize);
+
+    var safeMode = document.createElement("input");
+    safeMode.type = "checkbox";
+    safeMode.className = "dc-background-checkbox";
+    safeMode.checked = settings.safeMode;
+    safeMode.disabled = !state.workspace.canExecute;
+    safeMode.title = "Выполнять фоновые задания в безопасном режиме";
+    safeMode.setAttribute("aria-label", "Безопасный режим");
+    safeMode.addEventListener("change", function () {
+      requestCommand(activeDocument, "update-background-setting", {
+        settingName: "safeMode",
+        settingValue: safeMode.checked
+      });
+    });
+    appendBackgroundSettingLabel("Безопасный режим", safeMode);
   }
 
   function renderActionBar(algorithm, activeDocument) {
@@ -609,6 +698,7 @@
     elements.actionNote.textContent = "";
     elements.actionBar.hidden = !activeDocument;
     if (!activeDocument) {
+      renderBackgroundSettings(null);
       return;
     }
 
@@ -616,7 +706,8 @@
     commands.forEach(function (command) {
       var button = document.createElement("button");
       button.type = "button";
-      button.className = "dc-command-button" + (command.primary ? " dc-command-primary" : "") + (command.stop ? " dc-command-stop" : "");
+      button.className = "dc-command-button" + (command.primary ? " dc-command-primary" : "")
+        + (command.stop ? " dc-command-stop" : "") + (command.snippet ? " dc-command-snippet" : "");
       button.disabled = !state.workspace.canExecute;
       button.title = command.label;
       button.setAttribute("aria-label", command.label);
@@ -638,6 +729,7 @@
       });
       elements.actions.appendChild(button);
     });
+    renderBackgroundSettings(activeDocument);
 
     if (normalizedKind(activeDocument.kind) === "beforequery") {
       elements.actionNote.textContent = "Код выполнится перед запросом";
@@ -1690,6 +1782,9 @@
       if (settingsChanged) {
         renderSettingsPanel();
         applyEditorSettings(state.workspace.settings.editor);
+        var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+        var activeAlgorithm = activeDocument ? state.algorithms.get(activeDocument.algorithmId) : null;
+        renderActionBar(activeAlgorithm, activeDocument);
       }
       return { success: true, applied: operations.length };
     } catch (error) {
