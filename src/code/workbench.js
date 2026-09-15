@@ -2375,6 +2375,21 @@
       : "EVENT_WORKSPACE_SAVE_REQUESTED", saveAs ? "save-workspace-as" : "save-workspace", true);
   }
 
+  function executeCurrentAlgorithmQueryFromUi() {
+    if (state.workspaceBusy || !state.workspace || !state.workspace.canExecute || !elements.dialogBackdrop.hidden) {
+      return;
+    }
+    var algorithm = currentAlgorithm();
+    var queryDocument = algorithm ? algorithmDocumentByKind(algorithm, "query") : null;
+    if (!queryDocument) {
+      return;
+    }
+    if (queryDocument.id !== state.activeDocumentId) {
+      activateDocumentById(queryDocument.id, true);
+    }
+    requestCommand(queryDocument, "execute-query");
+  }
+
   function initializeWorkspaceFileControls() {
     elements.newWorkspace.addEventListener("click", requestWorkspaceNew);
     elements.openWorkspace.addEventListener("click", requestWorkspaceOpen);
@@ -2384,6 +2399,17 @@
     if (!state.globalSaveHandlerInstalled) {
       document.addEventListener("keydown", function (event) {
         var key = String(event.key || "").toLowerCase();
+        if (!event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey
+            && (key === "f5" || event.keyCode === 116)) {
+          event.preventDefault();
+          if (event.stopImmediatePropagation) {
+            event.stopImmediatePropagation();
+          } else {
+            event.stopPropagation();
+          }
+          executeCurrentAlgorithmQueryFromUi();
+          return;
+        }
         if ((event.ctrlKey || event.metaKey) && !event.altKey && (key === "s" || event.keyCode === 83)) {
           event.preventDefault();
           if (event.stopImmediatePropagation) {
