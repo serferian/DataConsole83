@@ -1701,7 +1701,6 @@
     try {
       var parsed = parseJsonValue(workspaceJson, "loadWorkspace");
       var indexed = validateAndIndexWorkspace(parsed);
-      state.workspaceInitialized = true;
       var previousActiveId = state.activeDocumentId;
       disposeObsoleteModels(indexed.documents);
       state.workspace = indexed.workspace;
@@ -1750,14 +1749,14 @@
       if (nextDocument) {
         activateDocumentById(nextDocument.id, false);
       }
+      state.workspaceInitialized = true;
+      renderFileState();
       return {
         success: true,
         sessionId: state.workspace.sessionId,
         documentCount: indexed.orderedDocuments.length
       };
     } catch (error) {
-      state.workspaceInitialized = true;
-      renderFileState();
       return reportError("loadWorkspace", error);
     }
   }
