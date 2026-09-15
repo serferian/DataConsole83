@@ -39,7 +39,7 @@
 	ОтображатьНомераСтрокРедактораMonaco = Истина;
 	ПереноситьДлинныеСтрокиРедактораMonaco = Ложь;
 	ДокументЗагружен = Ложь;
-	АвтоИзменениеРазмера = Ложь;
+	АвтоИзменениеРазмера = Истина;
 	
 	Элементы.КодФоновойОбработки.Доступность = НЕ ИнформационнаяБазаФайловая();
 	Элементы.ФормаПоказатьПодсказкуПараметров.Пометка = Ложь;
@@ -4917,7 +4917,7 @@
 	Если ЭлементИмя = "ПолеЗапрос" Тогда
 		// Страница запроса
 		QueryView().init(Инфо.ВерсияПриложения);
-		QueryView().setOption("autoResizeEditorLayout", Истина);
+		QueryView().setOption("autoResizeEditorLayout", АвтоИзменениеРазмера);
 		QueryView().setOption("renderQueryDelimiters", Истина);
 		QueryView().setOption("generateModificationEvent", Истина);
 		QueryView().hideScrollX();
@@ -4930,7 +4930,7 @@
 	Если ЭлементИмя = "ПолеКод" Тогда
 		// Страница кода
 		CodeView().init(Инфо.ВерсияПриложения);
-		CodeView().setOption("autoResizeEditorLayout", Истина);
+		CodeView().setOption("autoResizeEditorLayout", АвтоИзменениеРазмера);
 		CodeView().setOption("renderQueryDelimiters", Ложь);
 		CodeView().setOption("generateModificationEvent", Истина);
 		CodeView().hideScrollX();
@@ -5983,6 +5983,7 @@
 Процедура ПрименитьНастройкиРедактораMonaco()
 
 	УстановитьПометкуТемы(?(ТемаРедактораMonaco = "dark", "ТемнаяТема", "СветлаяТема"));
+	Элементы.АвтоИзменениеРазмера.Пометка = АвтоИзменениеРазмера;
 	Элементы.ПодсвечиватьЗапросы.Пометка = ПодсвечиватьЗапросы;
 	УправлениеБыстрымиПодсказками();
 	УправлениеВидимостьюКартыКода();
@@ -5996,6 +5997,7 @@
 	ИмяТемы = ПолучитьИмяТемы()
 		+ ?(СтраницаКода = "КодЗапроса" Или ПодсвечиватьЗапросы, "-query", "");
 	ПереключитьТему(ИмяТемы);
+	View().setOption("autoResizeEditorLayout", АвтоИзменениеРазмера);
 	View().setOption("fontSize", РазмерШрифтаРедактораMonaco);
 	View().setOption("lineNumbers", ?(ОтображатьНомераСтрокРедактораMonaco, "on", "off"));
 	View().minimap(ВидимостьКартыКода);
