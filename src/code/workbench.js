@@ -1498,7 +1498,6 @@
 
       state.workspaceBusy = payload.busy;
       state.workspaceBusyOperationId = payload.busy ? operationId : "";
-      elements.workspaceBusy.removeAttribute("data-initialization");
       elements.workbench.setAttribute("aria-busy", payload.busy ? "true" : "false");
       if (payload.busy) {
         elements.workspaceBusyMessage.textContent = payload.message || "Загрузка файла алгоритмов…";
@@ -1515,18 +1514,6 @@
     } catch (error) {
       return reportError("setWorkspaceBusy", error);
     }
-  }
-
-  function finishWorkspaceInitialization() {
-    if (elements.workspaceBusy.getAttribute("data-initialization") !== "true") {
-      return;
-    }
-
-    elements.workspaceBusy.removeAttribute("data-initialization");
-    elements.workbench.setAttribute("aria-busy", "false");
-    elements.workspaceBusy.hidden = true;
-    elements.workspaceBusyFile.textContent = "";
-    elements.workspaceBusyFile.hidden = true;
   }
 
   function renderWorkspace() {
@@ -1757,14 +1744,12 @@
       if (nextDocument) {
         activateDocumentById(nextDocument.id, false);
       }
-      finishWorkspaceInitialization();
       return {
         success: true,
         sessionId: state.workspace.sessionId,
         documentCount: indexed.orderedDocuments.length
       };
     } catch (error) {
-      finishWorkspaceInitialization();
       return reportError("loadWorkspace", error);
     }
   }

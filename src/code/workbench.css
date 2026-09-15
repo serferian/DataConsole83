@@ -254,6 +254,10 @@ html.dc-theme-dark {
   display: none;
 }
 
+.dc-algorithm {
+  animation: dc-tree-reveal 140ms ease-out both;
+}
+
 .dc-algorithm-heading {
   display: flex;
   align-items: center;
@@ -1253,11 +1257,17 @@ html.dc-theme-dark .dc-table-duration.dc-duration-slow { color: #f48771; }
 .dc-dialog-primary { border-color: #0e639c; color: #ffffff; background: #0e639c; }
 .dc-dialog-primary:hover { border-color: #1177bb; background: #1177bb; }
 
+@keyframes dc-tree-reveal {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes dc-workspace-spin {
   to { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dc-algorithm,
   .dc-twistie::before,
   .dc-splitter::after {
     animation: none;
