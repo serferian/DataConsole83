@@ -125,6 +125,11 @@ define(['vs/editor/editor.main'], function () {
                     cmd: monaco.KeyMod.chord(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_D),
                     order: 1.3,
                     callback: function (ed) {
+                        if (isQueryMode() && window.DataConsoleApp
+                            && typeof window.DataConsoleApp.requestQueryConstructor === 'function') {
+                            window.DataConsoleApp.requestQueryConstructor();
+                            return null;
+                        }
                         let query_text = isQueryMode() ? getText() : getQuery();
                         sendEvent('EVENT_QUERY_CONSTRUCT', query_text);
                         return null;

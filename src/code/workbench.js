@@ -2375,6 +2375,15 @@
       : "EVENT_WORKSPACE_SAVE_REQUESTED", saveAs ? "save-workspace-as" : "save-workspace", true);
   }
 
+  function requestQueryConstructor() {
+    var activeDocument = state.activeDocumentId ? state.documents.get(state.activeDocumentId) : null;
+    if (!activeDocument || normalizedKind(activeDocument.kind) !== "query") {
+      return { success: false, requested: false };
+    }
+    requestCommand(activeDocument, "open-query-constructor");
+    return { success: true, requested: Boolean(state.workspace && state.workspace.canExecute) };
+  }
+
   function executeCurrentAlgorithmQueryFromUi() {
     if (state.workspaceBusy || !state.workspace || !state.workspace.canExecute || !elements.dialogBackdrop.hidden) {
       return;
@@ -2639,6 +2648,7 @@
     activateDocument: activateDocument,
     getActiveDocument: getActiveDocument,
     getDocumentText: getDocumentText,
+    requestQueryConstructor: requestQueryConstructor,
     setSidebarVisible: setSidebarVisible,
     setParametersVisible: setParametersVisible,
     setSettingsVisible: setSettingsVisible,
