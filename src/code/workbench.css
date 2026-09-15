@@ -720,28 +720,42 @@ body.dc-resizing {
   box-sizing: border-box;
 }
 .dc-parameter-hint[hidden] { display: none; }
-.dc-parameter-hint-items { display: flex; flex-wrap: wrap; gap: 3px 18px; }
+.dc-parameter-hint-items {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  min-width: 0;
+}
 .dc-parameter-hint-item {
   display: grid;
-  grid-template-columns: minmax(120px, auto) minmax(100px, auto) minmax(180px, 1fr);
-  flex: 1 1 420px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 1.65fr);
   align-items: baseline;
+  width: 100%;
   min-width: 0;
   color: var(--dc-text);
   font-size: 11px;
   line-height: 17px;
+  box-sizing: border-box;
 }
 .dc-parameter-hint-item.dc-parameter-hint-level-1 { padding-left: 16px; }
 .dc-parameter-hint-name {
-  overflow: hidden;
+  min-width: 0;
   padding-right: 10px;
   color: var(--dc-selected-edge);
   font: 600 11px/17px Consolas, "Courier New", monospace;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
-.dc-parameter-hint-type { padding-right: 10px; color: var(--dc-muted); white-space: nowrap; }
-.dc-parameter-hint-description { min-width: 0; color: var(--dc-text); }
+.dc-parameter-hint-type {
+  min-width: 0;
+  padding-right: 10px;
+  color: var(--dc-muted);
+  overflow-wrap: anywhere;
+}
+.dc-parameter-hint-description {
+  min-width: 0;
+  color: var(--dc-text);
+  overflow-wrap: anywhere;
+}
 
 .dc-background-settings {
   display: flex;
@@ -780,7 +794,6 @@ body.dc-resizing {
   .dc-background-setting-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .dc-parameter-hint-toggle-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .dc-parameter-hint-glyph { margin-right: 0; }
-  .dc-parameter-hint-item { grid-template-columns: minmax(110px, auto) minmax(90px, auto) minmax(160px, 1fr); }
 }
 
 .dc-work-area {
