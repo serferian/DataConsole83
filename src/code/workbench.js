@@ -38,8 +38,6 @@
     ]
   };
 
-  var INITIALIZATION_OPERATION_ID = "workspace-initialization";
-
   var state = {
     workspace: null,
     algorithms: new Map(),
@@ -71,8 +69,8 @@
     parametersVisible: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
-    workspaceBusy: true,
-    workspaceBusyOperationId: INITIALIZATION_OPERATION_ID,
+    workspaceBusy: false,
+    workspaceBusyOperationId: "",
     sidebarWidth: 260,
     parametersWidth: 280
   };
@@ -1500,6 +1498,7 @@
 
       state.workspaceBusy = payload.busy;
       state.workspaceBusyOperationId = payload.busy ? operationId : "";
+      elements.workspaceBusy.removeAttribute("data-initialization");
       elements.workbench.setAttribute("aria-busy", payload.busy ? "true" : "false");
       if (payload.busy) {
         elements.workspaceBusyMessage.textContent = payload.message || "Загрузка файла алгоритмов…";
@@ -1519,17 +1518,15 @@
   }
 
   function finishWorkspaceInitialization() {
-    if (state.workspaceBusyOperationId !== INITIALIZATION_OPERATION_ID) {
+    if (elements.workspaceBusy.getAttribute("data-initialization") !== "true") {
       return;
     }
 
-    state.workspaceBusy = false;
-    state.workspaceBusyOperationId = "";
+    elements.workspaceBusy.removeAttribute("data-initialization");
     elements.workbench.setAttribute("aria-busy", "false");
     elements.workspaceBusy.hidden = true;
     elements.workspaceBusyFile.textContent = "";
     elements.workspaceBusyFile.hidden = true;
-    renderFileState();
   }
 
   function renderWorkspace() {
@@ -1760,15 +1757,15 @@
       if (nextDocument) {
         activateDocumentById(nextDocument.id, false);
       }
+      finishWorkspaceInitialization();
       return {
         success: true,
         sessionId: state.workspace.sessionId,
         documentCount: indexed.orderedDocuments.length
       };
     } catch (error) {
-      return reportError("loadWorkspace", error);
-    } finally {
       finishWorkspaceInitialization();
+      return reportError("loadWorkspace", error);
     }
   }
 
