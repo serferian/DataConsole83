@@ -236,6 +236,7 @@
 			<Template>ПользовательскиеСниппеты</Template>
 			<Template>ПользовательскиеФункции</Template>
 			<Template>МакетЗапроса</Template>
+			<Template>ИсполнительКодаСервер</Template>
 			<Template>src2</Template>
 			<Template>src</Template>
 		</ChildObjects>
