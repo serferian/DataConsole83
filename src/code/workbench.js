@@ -665,9 +665,9 @@
   function requestCommand(documentItem, action, additional) {
     if (!documentItem || !state.workspace
         || (!state.workspace.canExecute && action !== "toggle-parameter-hint")) {
-      return;
+      return false;
     }
-    emitBridgeEvent("EVENT_COMMAND_REQUESTED", commandPayload(documentItem, action, additional));
+    return emitBridgeEvent("EVENT_COMMAND_REQUESTED", commandPayload(documentItem, action, additional));
   }
 
   function renderParameterHint(activeDocument) {
@@ -2402,8 +2402,8 @@
     if (!activeDocument || normalizedKind(activeDocument.kind) !== "query") {
       return { success: false, requested: false };
     }
-    requestCommand(activeDocument, "open-query-constructor");
-    return { success: true, requested: Boolean(state.workspace && state.workspace.canExecute) };
+    var requested = requestCommand(activeDocument, "open-query-constructor");
+    return { success: requested, requested: requested };
   }
 
   function executeCurrentAlgorithmQueryFromUi() {

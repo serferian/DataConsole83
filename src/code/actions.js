@@ -127,8 +127,10 @@ define(['vs/editor/editor.main'], function () {
                     callback: function (ed) {
                         if (isQueryMode() && window.DataConsoleApp
                             && typeof window.DataConsoleApp.requestQueryConstructor === 'function') {
-                            window.DataConsoleApp.requestQueryConstructor();
-                            return null;
+                            let requestResult = window.DataConsoleApp.requestQueryConstructor();
+                            if (requestResult && requestResult.requested) {
+                                return null;
+                            }
                         }
                         let query_text = isQueryMode() ? getText() : getQuery();
                         sendEvent('EVENT_QUERY_CONSTRUCT', query_text);
