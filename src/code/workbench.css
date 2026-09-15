@@ -1016,7 +1016,38 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 .dc-parameter-name,
 .dc-parameter-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-parameter-name { color: var(--dc-muted); font-size: 11px; line-height: 15px; }
-.dc-parameter-value { color: var(--dc-text); font-size: 12px; line-height: 17px; }
+.dc-parameter-value-row { display: flex; align-items: center; min-width: 0; }
+.dc-parameter-value { flex: 1 1 auto; min-width: 0; color: var(--dc-text); font-size: 12px; line-height: 22px; }
+.dc-parameter-value-actions { display: flex; flex: 0 0 auto; gap: 1px; margin-left: 5px; }
+.dc-parameter-value-action {
+  width: 22px;
+  height: 22px;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background-color: transparent;
+  cursor: pointer;
+}
+.dc-parameter-value-action:hover:not(:disabled) { border-color: var(--dc-border); background-color: var(--dc-hover); }
+.dc-parameter-value-action:focus { outline: 1px solid var(--dc-focus); outline-offset: -1px; }
+.dc-parameter-value-action:disabled { cursor: default; opacity: .35; }
+.dc-parameter-value-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.dc-parameter-value-icon-date { background-image: url("tree/icons/date.png"); }
+.dc-parameter-value-icon-string { border-radius: 2px; background-color: #fff; background-image: url("tree/icons/string.png"); }
+.dc-parameter-value-icon-number { background-image: url("tree/icons/int.png"); }
+.dc-parameter-value-icon-other { background-image: url("tree/icons/keyvalue.png"); }
+.dc-parameter-value-action-clear {
+  color: var(--dc-text);
+  background-image: none;
+  font: 400 18px/16px "Segoe UI", Arial, sans-serif;
+}
+.dc-parameter-value-action-clear::before { content: "\00d7"; }
 
 .dc-tables-header {
   display: flex;

@@ -855,8 +855,46 @@
       row.setAttribute("aria-pressed", isSelected ? "true" : "false");
       var name = appendTextElement(row, "div", "dc-parameter-name", parameter.name);
       name.title = parameter.typeName || parameter.name;
-      var value = appendTextElement(row, "div", "dc-parameter-value", parameter.presentation);
+      var valueRow = document.createElement("div");
+      valueRow.className = "dc-parameter-value-row";
+      var value = appendTextElement(valueRow, "div", "dc-parameter-value", parameter.presentation);
       value.title = parameter.typeName ? parameter.typeName + ": " + parameter.presentation : parameter.presentation;
+      var actions = document.createElement("div");
+      actions.className = "dc-parameter-value-actions";
+      [
+        { action: "date", title: "Дата — установить значение", icon: "date" },
+        { action: "string", title: "Строка — многострочный ввод", icon: "string" },
+        { action: "number", title: "Число — формат 15,5", icon: "number" },
+        { action: "other", title: "Прочее — выбрать значение", icon: "other" },
+        { action: "clear", title: "Очистить значение", icon: "clear" }
+      ].forEach(function (descriptor) {
+        var button = document.createElement("button");
+        button.className = "dc-parameter-value-action dc-parameter-value-action-" + descriptor.icon;
+        button.type = "button";
+        button.title = descriptor.title;
+        button.setAttribute("aria-label", descriptor.title);
+        button.disabled = !state.workspace.canExecute;
+        if (descriptor.icon !== "clear") {
+          var icon = document.createElement("span");
+          icon.className = "dc-parameter-value-icon dc-parameter-value-icon-" + descriptor.icon;
+          icon.setAttribute("aria-hidden", "true");
+          button.appendChild(icon);
+        }
+        button.addEventListener("click", function (event) {
+          selectParameter(parameter.id);
+          requestParameterEdit(descriptor.action, algorithm.id, parameter.id);
+          event.stopPropagation();
+        });
+        button.addEventListener("dblclick", function (event) {
+          event.stopPropagation();
+        });
+        button.addEventListener("keydown", function (event) {
+          event.stopPropagation();
+        });
+        actions.appendChild(button);
+      });
+      valueRow.appendChild(actions);
+      row.appendChild(valueRow);
       row.addEventListener("click", function () {
         selectParameter(parameter.id);
       });
