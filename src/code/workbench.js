@@ -69,6 +69,7 @@
     parametersVisible: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
+    workspaceInitialized: false,
     workspaceBusy: false,
     workspaceBusyOperationId: "",
     sidebarWidth: 260,
@@ -98,6 +99,8 @@
     elements.searchClear = byId("dataconsole-search-clear");
     elements.searchEmpty = byId("dataconsole-search-empty");
     elements.explorerEmpty = byId("dataconsole-explorer-empty");
+    elements.emptyInitializing = byId("dataconsole-empty-initializing");
+    elements.emptyOpen = byId("dataconsole-empty-open");
     elements.editorEmpty = byId("dataconsole-editor-empty");
     elements.editorShell = byId("dataconsole-editor-shell");
     elements.modeBar = byId("dataconsole-mode-bar");
@@ -1475,7 +1478,9 @@
     elements.openWorkspace.disabled = !canOpen;
     elements.saveWorkspace.disabled = !canChange;
     elements.saveWorkspaceAs.disabled = !canChange;
-    byId("dataconsole-empty-open").disabled = state.workspaceBusy;
+    elements.emptyInitializing.hidden = state.workspaceInitialized;
+    elements.emptyOpen.hidden = !state.workspaceInitialized;
+    elements.emptyOpen.disabled = state.workspaceBusy;
   }
 
   function setWorkspaceBusy(payloadJson) {
@@ -1696,6 +1701,7 @@
     try {
       var parsed = parseJsonValue(workspaceJson, "loadWorkspace");
       var indexed = validateAndIndexWorkspace(parsed);
+      state.workspaceInitialized = true;
       var previousActiveId = state.activeDocumentId;
       disposeObsoleteModels(indexed.documents);
       state.workspace = indexed.workspace;
@@ -1750,6 +1756,8 @@
         documentCount: indexed.orderedDocuments.length
       };
     } catch (error) {
+      state.workspaceInitialized = true;
+      renderFileState();
       return reportError("loadWorkspace", error);
     }
   }
@@ -2335,7 +2343,7 @@
     elements.openWorkspace.addEventListener("click", requestWorkspaceOpen);
     elements.saveWorkspace.addEventListener("click", function () { requestWorkspaceSave(false); });
     elements.saveWorkspaceAs.addEventListener("click", function () { requestWorkspaceSave(true); });
-    byId("dataconsole-empty-open").addEventListener("click", requestWorkspaceOpen);
+    elements.emptyOpen.addEventListener("click", requestWorkspaceOpen);
     if (!state.globalSaveHandlerInstalled) {
       document.addEventListener("keydown", function (event) {
         var key = String(event.key || "").toLowerCase();

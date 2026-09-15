@@ -456,6 +456,25 @@ html.dc-theme-dark .dc-tree-document-button.dc-has-content { color: #171717; }
   font-weight: 600;
 }
 
+.dc-empty-loading {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: 4px;
+}
+
+.dc-empty-loading[hidden],
+.dc-explorer-empty button[hidden] {
+  display: none;
+}
+
+.dc-empty-spinner {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  box-sizing: border-box;
+}
+
 .dc-explorer-empty button {
   margin-top: 4px;
   padding: 5px 10px;

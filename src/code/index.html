@@ -53,7 +53,11 @@
       <div id="dataconsole-explorer-empty" class="dc-explorer-empty">
         <span class="dc-empty-kicker">Нет открытого файла</span>
         <span>Откройте файл алгоритмов, чтобы начать работу.</span>
-        <button id="dataconsole-empty-open" type="button">Открыть файл</button>
+        <span id="dataconsole-empty-initializing" class="dc-empty-loading" role="status" aria-live="polite">
+          <span class="dc-workspace-spinner dc-empty-spinner" aria-hidden="true"></span>
+          <span>Загрузка алгоритмов…</span>
+        </span>
+        <button id="dataconsole-empty-open" type="button" hidden>Открыть файл</button>
       </div>
     </aside>
 
