@@ -122,6 +122,7 @@
     elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
     elements.parametersList = byId("dataconsole-parameters-list");
     elements.editParameter = byId("dataconsole-edit-parameter");
+    elements.copyParameter = byId("dataconsole-copy-parameter");
     elements.clearParameter = byId("dataconsole-clear-parameter");
     elements.fillParameters = byId("dataconsole-fill-parameters");
     elements.addParameter = byId("dataconsole-add-parameter");
@@ -865,6 +866,7 @@
         { action: "date", title: "Дата — установить значение", icon: "date" },
         { action: "string", title: "Строка — многострочный ввод", icon: "string" },
         { action: "number", title: "Число — формат 15,5", icon: "number" },
+        { action: "value-list", title: "СписокЗначений — открыть подбор", icon: "list" },
         { action: "other", title: "Прочее — выбрать значение", icon: "other" },
         { action: "clear", title: "Очистить значение", icon: "clear" }
       ].forEach(function (descriptor) {
@@ -918,7 +920,7 @@
   }
 
   function updateMutationButtonStates(algorithm) {
-    var canMutate = Boolean(state.workspace && state.workspace.canExecute);
+    var canMutate = Boolean(state.workspace && state.workspace.canExecute && !state.workspaceBusy);
     var hasAlgorithm = Boolean(algorithm);
     elements.addAlgorithm.disabled = !canMutate;
     elements.addChildAlgorithm.disabled = !canMutate || !hasAlgorithm;
@@ -926,6 +928,7 @@
     elements.addParameter.disabled = !canMutate || !hasAlgorithm;
     elements.deleteParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
     elements.editParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
+    elements.copyParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
     elements.clearParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
   }
 
@@ -1361,6 +1364,23 @@
     });
   }
 
+  function copySelectedParameterFromUi() {
+    if (state.workspaceBusy || !state.workspace || !state.workspace.canExecute || !elements.dialogBackdrop.hidden) {
+      return false;
+    }
+    var algorithm = currentAlgorithm();
+    if (!algorithm || !state.selectedParameterId || !algorithm.parameters.some(function (parameter) {
+      return parameter.id === state.selectedParameterId;
+    })) {
+      return false;
+    }
+    requestWorkspaceMutation("copy-parameter", {
+      algorithmId: algorithm.id,
+      parameterId: state.selectedParameterId
+    });
+    return true;
+  }
+
   function collectSearchResults(roots, query) {
     var visible = new Map();
     var direct = new Map();
@@ -1553,6 +1573,7 @@
         elements.workspaceBusyFile.hidden = true;
       }
       renderFileState();
+      updateMutationButtonStates(currentAlgorithm());
       return { success: true, applied: true, busy: state.workspaceBusy };
     } catch (error) {
       return reportError("setWorkspaceBusy", error);
@@ -2182,6 +2203,7 @@
     elements.addParameter.addEventListener("click", addParameterFromUi);
     elements.deleteParameter.addEventListener("click", deleteParameterFromUi);
     elements.editParameter.addEventListener("click", function () { editSelectedParameterFromUi("edit"); });
+    elements.copyParameter.addEventListener("click", copySelectedParameterFromUi);
     elements.clearParameter.addEventListener("click", function () { editSelectedParameterFromUi("clear"); });
     elements.dialogCancel.addEventListener("click", closeWorkbenchDialog);
     elements.dialogConfirm.addEventListener("click", confirmWorkbenchDialog);
@@ -2408,6 +2430,18 @@
     if (!state.globalSaveHandlerInstalled) {
       document.addEventListener("keydown", function (event) {
         var key = String(event.key || "").toLowerCase();
+        if (!event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey
+            && (key === "f9" || event.keyCode === 120)) {
+          if (copySelectedParameterFromUi()) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) {
+              event.stopImmediatePropagation();
+            } else {
+              event.stopPropagation();
+            }
+          }
+          return;
+        }
         if (!event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey
             && (key === "f5" || event.keyCode === 116)) {
           event.preventDefault();
