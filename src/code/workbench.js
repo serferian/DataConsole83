@@ -587,6 +587,24 @@
     }
   }
 
+  function restoreSelectedAlgorithmPosition(algorithmId) {
+    var normalizedAlgorithmId = String(algorithmId);
+    window.setTimeout(function () {
+      if (state.selectedAlgorithmId !== normalizedAlgorithmId || !elements.tree) {
+        return;
+      }
+      var rendered = state.algorithmNodes.get(normalizedAlgorithmId);
+      if (!rendered || !rendered.heading) {
+        return;
+      }
+      var treeRect = elements.tree.getBoundingClientRect();
+      var headingRect = rendered.heading.getBoundingClientRect();
+      var centeredOffset = Math.max(0, (elements.tree.clientHeight - headingRect.height) / 2);
+      elements.tree.scrollTop += headingRect.top - treeRect.top - centeredOffset;
+      state.sidebarScrollTop = elements.tree.scrollTop;
+    }, 0);
+  }
+
   function updateRenderedAlgorithmStates() {
     var expansion = state.searchQuery ? state.searchExpandedAlgorithms : state.expandedAlgorithms;
     state.algorithmNodes.forEach(function (rendered, algorithmId) {
@@ -1803,6 +1821,9 @@
         state.searchExpandedAlgorithms = new Map();
       }
       renderWorkspace();
+      if (nextDocument) {
+        restoreSelectedAlgorithmPosition(nextDocument.algorithmId);
+      }
       applyEditorSettings(state.workspace.settings.editor);
 
       if (nextDocument) {
