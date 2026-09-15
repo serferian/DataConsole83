@@ -20,9 +20,11 @@
 				</v8:item>
 			</Synonym>
 			<Comment>Служебный шаблон DataConsole83</Comment>
-			<DefaultForm/>
+			<DefaultForm>ExternalDataProcessor.ИсполнительКодаСервер.Form.ИсполнительКодаКлиент</DefaultForm>
 			<AuxiliaryForm/>
 		</Properties>
-		<ChildObjects/>
+		<ChildObjects>
+			<Form>ИсполнительКодаКлиент</Form>
+		</ChildObjects>
 	</ExternalDataProcessor>
 </MetaDataObject>

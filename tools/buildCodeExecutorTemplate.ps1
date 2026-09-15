@@ -8,12 +8,22 @@ $ErrorActionPreference = "Stop"
 
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $sourceRoot = Join-Path $PSScriptRoot "code-executor-template"
-$moduleRelativePath = "ИсполнительКодаСервер\Ext\ObjectModule.bsl"
 $outputPath = Join-Path $repositoryRoot "src\epf\DtCons83Monaco\DtCons83Monaco\Templates\ИсполнительКодаСервер\Ext\Template.bin"
-$slotContentMarker = "__DC83_MODULE_SLOT_CONTENT__"
-$slotStartMarker = "__DC83_MODULE_SLOT_START__"
-$slotEndMarker = "__DC83_MODULE_SLOT_END__"
 $slotSize = 262144
+$moduleSlots = @(
+	@{
+		RelativePath = "ИсполнительКодаСервер\Ext\ObjectModule.bsl"
+		ContentMarker = "__DC83_MODULE_SLOT_CONTENT__"
+		StartMarker = "__DC83_MODULE_SLOT_START__"
+		EndMarker = "__DC83_MODULE_SLOT_END__"
+	},
+	@{
+		RelativePath = "ИсполнительКодаСервер\Forms\ИсполнительКодаКлиент\Ext\Form\Module.bsl"
+		ContentMarker = "__DC83_FORM_MODULE_SLOT_CONTENT__"
+		StartMarker = "__DC83_FORM_MODULE_SLOT_START__"
+		EndMarker = "__DC83_FORM_MODULE_SLOT_END__"
+	}
+)
 
 if (-not (Test-Path -LiteralPath $V8UnpackPath -PathType Leaf)) {
 	throw "Не найден v8unpack.exe: $V8UnpackPath"
@@ -40,11 +50,13 @@ try {
 	New-Item -ItemType Directory -Path $compiledDirectory, $unpackedDirectory | Out-Null
 	Copy-Item -LiteralPath $sourceRoot -Destination $generatedSource -Recurse
 
-	$modulePath = Join-Path $generatedSource $moduleRelativePath
-	$moduleText = Get-Content -LiteralPath $modulePath -Raw
 	$expandedSlot = "// " + ("_" * $slotSize)
-	$moduleText = $moduleText.Replace("// $slotContentMarker", $expandedSlot)
-	[System.IO.File]::WriteAllText($modulePath, $moduleText, [System.Text.UTF8Encoding]::new($false))
+	foreach ($moduleSlot in $moduleSlots) {
+		$modulePath = Join-Path $generatedSource $moduleSlot.RelativePath
+		$moduleText = Get-Content -LiteralPath $modulePath -Raw
+		$moduleText = $moduleText.Replace("// $($moduleSlot.ContentMarker)", $expandedSlot)
+		[System.IO.File]::WriteAllText($modulePath, $moduleText, [System.Text.UTF8Encoding]::new($false))
+	}
 
 	$previousConnection = $env:VRUNNER_IBCONNECTION
 	try {
@@ -73,7 +85,11 @@ try {
 		throw "Распаковка шаблонной обработки завершилась с кодом $LASTEXITCODE."
 	}
 
-	$moduleDataFile = $null
+	$remainingSlots = @{}
+	foreach ($moduleSlot in $moduleSlots) {
+		$remainingSlots[$moduleSlot.StartMarker] = $moduleSlot
+	}
+
 	foreach ($dataFile in Get-ChildItem -LiteralPath $unpackedDirectory -Filter "*.data" -File) {
 		$inflatedFile = Join-Path $resolvedTemporaryRoot ($dataFile.BaseName + ".inflated")
 		& $V8UnpackPath -INFLATE $dataFile.FullName $inflatedFile | Out-Null
@@ -82,15 +98,19 @@ try {
 		}
 
 		$inflatedText = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($inflatedFile))
-		if ($inflatedText.Contains($slotStartMarker) -and $inflatedText.Contains($slotEndMarker)) {
-			$moduleDataFile = $dataFile.FullName
-			Copy-Item -LiteralPath $inflatedFile -Destination $moduleDataFile -Force
-			break
+		foreach ($slotStartMarker in @($remainingSlots.Keys)) {
+			$moduleSlot = $remainingSlots[$slotStartMarker]
+			if ($inflatedText.Contains($moduleSlot.StartMarker) -and $inflatedText.Contains($moduleSlot.EndMarker)) {
+				Copy-Item -LiteralPath $inflatedFile -Destination $dataFile.FullName -Force
+				$remainingSlots.Remove($slotStartMarker)
+				break
+			}
 		}
 	}
 
-	if ($null -eq $moduleDataFile) {
-		throw "В собранной обработке не найден слот модуля."
+	if ($remainingSlots.Count -ne 0) {
+		$missingMarkers = $remainingSlots.Keys -join ", "
+		throw "В собранной обработке не найдены слоты модулей: $missingMarkers."
 	}
 
 	$outputDirectory = Split-Path -Parent $outputPath
@@ -101,8 +121,10 @@ try {
 	}
 
 	$outputText = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($outputPath))
-	if (-not $outputText.Contains($slotStartMarker) -or -not $outputText.Contains($slotEndMarker)) {
-		throw "Слот модуля не найден в итоговом шаблоне."
+	foreach ($moduleSlot in $moduleSlots) {
+		if (-not $outputText.Contains($moduleSlot.StartMarker) -or -not $outputText.Contains($moduleSlot.EndMarker)) {
+			throw "Слот $($moduleSlot.StartMarker) не найден в итоговом шаблоне."
+		}
 	}
 
 	Get-Item -LiteralPath $outputPath
