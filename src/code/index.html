@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>BSL-editor</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+  <link href="./decorations.css" rel="stylesheet">
+  <link href="./tree/tree.css" rel="stylesheet">
+  <link href="./workbench.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <div id="dataconsole-workbench" class="dc-workbench">
+    <aside id="dataconsole-explorer" class="dc-explorer" aria-label="Проводник алгоритмов">
+      <div class="dc-explorer-header">
+        <div class="dc-explorer-heading">
+          <div class="dc-explorer-title">АЛГОРИТМЫ</div>
+          <div id="dataconsole-file-name" class="dc-file-name">Рабочая область не открыта</div>
+        </div>
+        <div class="dc-explorer-actions">
+          <button id="dataconsole-new-workspace" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Создать файл алгоритмов" title="Новый файл алгоритмов">◇</button>
+          <button id="dataconsole-open-workspace" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Открыть файл алгоритмов" title="Открыть файл алгоритмов">↗</button>
+          <button id="dataconsole-save-workspace" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Сохранить файл алгоритмов" title="Сохранить файл алгоритмов (Ctrl+S)">↓</button>
+          <button id="dataconsole-save-workspace-as" class="dc-icon-button dc-file-action" type="button"
+            aria-label="Сохранить файл алгоритмов как" title="Сохранить файл алгоритмов как">⇲</button>
+          <span class="dc-explorer-action-separator" aria-hidden="true"></span>
+          <button id="dataconsole-add-algorithm" class="dc-icon-button" type="button"
+            aria-label="Добавить алгоритм" title="Добавить алгоритм рядом">+</button>
+          <button id="dataconsole-add-child-algorithm" class="dc-icon-button" type="button"
+            aria-label="Добавить вложенный алгоритм" title="Добавить вложенный алгоритм">↳</button>
+          <button id="dataconsole-delete-algorithm" class="dc-icon-button" type="button"
+            aria-label="Удалить алгоритм" title="Удалить выбранный алгоритм">−</button>
+          <button id="dataconsole-collapse-all" class="dc-icon-button" type="button"
+            aria-label="Свернуть все" title="Свернуть все">⇤</button>
+        </div>
+      </div>
+      <div class="dc-search-row">
+        <div id="dataconsole-search-control" class="dc-search-control">
+          <input id="dataconsole-search" class="dc-search-input" type="text"
+            placeholder="Найти алгоритм или код" aria-label="Найти алгоритм или код"
+            autocomplete="off" spellcheck="false">
+          <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
+            aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+        </div>
+      </div>
+      <div id="dataconsole-algorithm-tree" class="dc-tree" role="tree" aria-label="Алгоритмы"></div>
+      <div id="dataconsole-search-empty" class="dc-search-empty" hidden>Ничего не найдено</div>
+      <div id="dataconsole-explorer-empty" class="dc-explorer-empty">
+        <span class="dc-empty-kicker">Нет открытого файла</span>
+        <span>Откройте файл алгоритмов, чтобы начать работу.</span>
+        <span id="dataconsole-empty-initializing" class="dc-empty-loading" role="status" aria-live="polite">
+          <span class="dc-workspace-spinner dc-empty-spinner" aria-hidden="true"></span>
+          <span>Загрузка алгоритмов…</span>
+        </span>
+        <button id="dataconsole-empty-open" type="button" hidden>Открыть файл</button>
+      </div>
+    </aside>
+
+    <div id="dataconsole-splitter" class="dc-splitter" role="separator" aria-label="Изменить ширину проводника"
+      aria-orientation="vertical" aria-valuemin="210" aria-valuemax="520" aria-valuenow="260" tabindex="0"></div>
+
+    <main id="dataconsole-editor-shell" class="dc-editor-shell">
+      <div id="dataconsole-mode-bar" class="dc-mode-bar">
+        <div id="dataconsole-mode-tabs" class="dc-mode-tabs" role="tablist" aria-label="Режимы алгоритма" hidden>
+          <button class="dc-mode-tab dc-kind-query" type="button" role="tab"
+            data-document-kind="query" aria-selected="false">Запрос</button>
+          <button class="dc-mode-tab dc-kind-before" type="button" role="tab"
+            data-document-kind="before-query" aria-selected="false">До запроса</button>
+          <button class="dc-mode-tab dc-kind-client" type="button" role="tab"
+            data-document-kind="client" aria-selected="false">Клиент</button>
+          <button class="dc-mode-tab dc-kind-server" type="button" role="tab"
+            data-document-kind="server" aria-selected="false">Сервер</button>
+          <button class="dc-mode-tab dc-kind-background" type="button" role="tab"
+            data-document-kind="background" aria-selected="false">Фон</button>
+        </div>
+        <div class="dc-layout-controls" role="toolbar" aria-label="Расположение панелей">
+          <button id="dataconsole-toggle-primary-sidebar" class="dc-layout-button" type="button"
+            aria-label="Переключить основную боковую панель" aria-pressed="true"
+            title="Переключить основную боковую панель">
+            <span class="dc-layout-glyph dc-layout-primary" aria-hidden="true"></span>
+          </button>
+          <button id="dataconsole-toggle-secondary-sidebar" class="dc-layout-button" type="button"
+            aria-label="Переключить дополнительную боковую панель" aria-pressed="true"
+            title="Переключить дополнительную боковую панель">
+            <span class="dc-layout-glyph dc-layout-secondary" aria-hidden="true"></span>
+          </button>
+          <button id="dataconsole-toggle-settings" class="dc-layout-button" type="button"
+            aria-label="Открыть настройки" aria-pressed="false" title="Открыть настройки">
+            <span class="dc-settings-glyph" aria-hidden="true">⚙</span>
+          </button>
+        </div>
+      </div>
+      <div id="dataconsole-action-bar" class="dc-action-bar" aria-label="Команды документа" hidden>
+        <div id="dataconsole-actions" class="dc-actions"></div>
+        <div id="dataconsole-background-settings" class="dc-background-settings"
+          aria-label="Настройки фонового выполнения" hidden></div>
+        <div id="dataconsole-action-note" class="dc-action-note"></div>
+        <div id="dataconsole-parameter-hint-control" class="dc-parameter-hint-control" hidden>
+          <button id="dataconsole-toggle-parameter-hint" class="dc-parameter-hint-toggle" type="button"
+            aria-label="Показать параметры среды выполнения" aria-controls="dataconsole-parameter-hint"
+            aria-expanded="false" aria-pressed="false" title="Параметры среды выполнения">
+            <span class="dc-parameter-hint-glyph" aria-hidden="true">?</span>
+            <span class="dc-parameter-hint-toggle-label">Параметры кода</span>
+          </button>
+        </div>
+        <section id="dataconsole-parameter-hint" class="dc-parameter-hint"
+          aria-label="Параметры среды выполнения" aria-live="polite" hidden>
+          <div id="dataconsole-parameter-hint-items" class="dc-parameter-hint-items"></div>
+        </section>
+      </div>
+      <div class="dc-work-area">
+        <section class="dc-editor-pane">
+          <div id="container"></div>
+          <div id="dataconsole-editor-empty" class="dc-editor-empty" aria-live="polite">
+            <div class="dc-editor-empty-mark" aria-hidden="true">DC</div>
+            <div class="dc-editor-empty-title">DataConsole83</div>
+            <div class="dc-editor-empty-copy">Откройте рабочую область и выберите документ алгоритма.</div>
+          </div>
+          <div id="display">
+            <div id="display-header">
+              <div id="display-title"></div>
+              <div id="display-close"></div>
+            </div>
+            <div id="variables-display">
+              <div id="variables-tree"></div>
+            </div>
+          </div>
+        </section>
+        <div id="dataconsole-parameters-splitter" class="dc-parameters-splitter" role="separator"
+          aria-label="Изменить ширину панели параметров" aria-orientation="vertical"
+          aria-valuemin="220" aria-valuemax="420" aria-valuenow="280" tabindex="0"></div>
+        <aside id="dataconsole-parameters" class="dc-parameters-pane" aria-label="Параметры алгоритма">
+          <section class="dc-secondary-section dc-parameters-section" aria-label="Параметры алгоритма">
+            <div class="dc-parameters-header">
+              <div class="dc-parameters-heading">
+                <div class="dc-parameters-title">ПАРАМЕТРЫ</div>
+                <div id="dataconsole-parameters-algorithm" class="dc-parameters-algorithm">Выберите алгоритм</div>
+              </div>
+              <div class="dc-parameters-actions">
+                <button id="dataconsole-edit-parameter" class="dc-icon-button dc-parameter-edit-action" type="button"
+                  aria-label="Изменить значение выбранного параметра" title="Изменить значение выбранного параметра" disabled>&#9998;</button>
+                <button id="dataconsole-copy-parameter" class="dc-icon-button dc-parameter-copy-action" type="button"
+                  aria-label="Копировать выбранный параметр" title="Копировать выбранный параметр (F9)" disabled></button>
+                <button id="dataconsole-clear-parameter" class="dc-icon-button dc-parameter-clear-action" type="button"
+                  aria-label="Очистить значение выбранного параметра" title="Очистить значение выбранного параметра" disabled>&times;</button>
+                <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
+                  aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
+                <button id="dataconsole-add-parameter" class="dc-icon-button" type="button"
+                  aria-label="Добавить параметр" title="Добавить параметр">+</button>
+                <button id="dataconsole-delete-parameter" class="dc-icon-button" type="button"
+                  aria-label="Удалить параметр" title="Удалить выбранный параметр">−</button>
+              </div>
+            </div>
+            <div id="dataconsole-parameters-list" class="dc-parameters-list">
+              <div class="dc-parameters-empty">Выберите алгоритм</div>
+            </div>
+          </section>
+          <div class="dc-secondary-divider" aria-hidden="true"></div>
+          <section class="dc-secondary-section dc-tables-section" aria-label="Таблицы запроса">
+            <div class="dc-tables-header">
+              <div class="dc-tables-title">ТАБЛИЦЫ</div>
+              <div class="dc-tables-actions">
+                <button id="dataconsole-toggle-measurements" class="dc-secondary-action" type="button"
+                  aria-label="Включить замеры выполнения" aria-pressed="false" title="Включить замеры выполнения">Замеры</button>
+                <button id="dataconsole-export-table" class="dc-secondary-action" type="button"
+                  aria-label="Выгрузить выбранную таблицу" title="Выгрузить выбранную таблицу" disabled>CSV</button>
+              </div>
+            </div>
+            <div class="dc-table-columns" aria-hidden="true">
+              <span>Имя</span><span>Строк</span><span>Время</span>
+            </div>
+            <div id="dataconsole-tables-list" class="dc-tables-list">
+              <div class="dc-tables-empty">Выполните запрос</div>
+            </div>
+          </section>
+          <section id="dataconsole-settings" class="dc-settings-section" aria-label="Настройки" hidden>
+            <div class="dc-settings-header">
+              <div class="dc-settings-title">НАСТРОЙКИ</div>
+              <button id="dataconsole-close-settings" class="dc-icon-button" type="button"
+                aria-label="Закрыть настройки" title="Закрыть настройки">×</button>
+            </div>
+            <div class="dc-settings-content">
+              <div class="dc-settings-subtitle">ОБРАБОТКА</div>
+              <label class="dc-settings-field" for="dataconsole-source-directory">
+                <span>Каталог исходного кода конфигурации</span>
+              </label>
+              <div class="dc-settings-path-row">
+                <input id="dataconsole-source-directory" class="dc-settings-input" type="text"
+                  autocomplete="off" spellcheck="false">
+                <button id="dataconsole-choose-source-directory" class="dc-settings-choose" type="button"
+                  aria-label="Выбрать каталог" title="Выбрать каталог">…</button>
+              </div>
+              <button id="dataconsole-load-common-modules" class="dc-settings-primary" type="button">
+                Загрузить общие модули
+              </button>
+              <label class="dc-settings-field" for="dataconsole-variable-display-mode">
+                <span>Значения переменных после выполнения</span>
+                <select id="dataconsole-variable-display-mode" class="dc-settings-input">
+                  <option value="0">Не показывать</option>
+                  <option value="1">В отдельном окне</option>
+                  <option value="2">Во всплывающих подсказках</option>
+                </select>
+              </label>
+              <label class="dc-settings-field" for="dataconsole-saved-list-limit">
+                <span>Сохраняемых элементов списка значений</span>
+                <input id="dataconsole-saved-list-limit" class="dc-settings-input" type="number"
+                  min="0" max="9999" step="1" inputmode="numeric"
+                  aria-describedby="dataconsole-saved-list-limit-note">
+              </label>
+              <div id="dataconsole-saved-list-limit-note" class="dc-settings-note">
+                Ноль использует стандартный предел — 1000 элементов.
+              </div>
+              <label class="dc-settings-toggle dc-settings-auto-save" for="dataconsole-auto-save-on-execute">
+                <input id="dataconsole-auto-save-on-execute" type="checkbox">
+                <span>Автоматически сохранять файл при выполнении</span>
+              </label>
+              <div class="dc-settings-subtitle dc-settings-editor-subtitle">РЕДАКТОР MONACO</div>
+              <label class="dc-settings-field" for="dataconsole-editor-theme">
+                <span>Тема</span>
+                <select id="dataconsole-editor-theme" class="dc-settings-input">
+                  <option value="light">Светлая</option>
+                  <option value="dark">Тёмная</option>
+                </select>
+              </label>
+              <label class="dc-settings-field" for="dataconsole-editor-font-size">
+                <span>Размер шрифта, px</span>
+                <input id="dataconsole-editor-font-size" class="dc-settings-input" type="number"
+                  min="10" max="28" step="1" inputmode="numeric">
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-line-numbers">
+                <input id="dataconsole-editor-line-numbers" type="checkbox">
+                <span>Номера строк</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-minimap">
+                <input id="dataconsole-editor-minimap" type="checkbox">
+                <span>Карта кода</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-word-wrap">
+                <input id="dataconsole-editor-word-wrap" type="checkbox">
+                <span>Перенос длинных строк</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-render-whitespace">
+                <input id="dataconsole-editor-render-whitespace" type="checkbox">
+                <span>Показывать пробелы и табуляции</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-quick-suggestions">
+                <input id="dataconsole-editor-quick-suggestions" type="checkbox">
+                <span>Быстрые подсказки</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-status-bar">
+                <input id="dataconsole-editor-status-bar" type="checkbox">
+                <span>Строка состояния</span>
+              </label>
+              <label class="dc-settings-toggle" for="dataconsole-editor-query-highlighting">
+                <input id="dataconsole-editor-query-highlighting" type="checkbox">
+                <span>Подсветка синтаксиса запросов</span>
+              </label>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <div id="dataconsole-workspace-busy" class="dc-workspace-busy" role="status" aria-live="polite" hidden>
+    <div class="dc-workspace-busy-card">
+      <span class="dc-workspace-spinner" aria-hidden="true"></span>
+      <div class="dc-workspace-busy-copy">
+        <div id="dataconsole-workspace-busy-message" class="dc-workspace-busy-message">Загрузка файла алгоритмов…</div>
+        <div id="dataconsole-workspace-busy-file" class="dc-workspace-busy-file" hidden></div>
+      </div>
+    </div>
+  </div>
+  <div id="dataconsole-dialog-backdrop" class="dc-dialog-backdrop" hidden>
+    <div class="dc-dialog" role="dialog" aria-modal="true" aria-labelledby="dataconsole-dialog-title">
+      <div id="dataconsole-dialog-title" class="dc-dialog-title"></div>
+      <div id="dataconsole-dialog-message" class="dc-dialog-message"></div>
+      <input id="dataconsole-dialog-input" class="dc-dialog-input" type="text" maxlength="150"
+        autocomplete="off" spellcheck="false">
+      <div id="dataconsole-dialog-error" class="dc-dialog-error" aria-live="polite" hidden></div>
+      <div class="dc-dialog-actions">
+        <button id="dataconsole-dialog-cancel" class="dc-dialog-button" type="button">Отмена</button>
+        <button id="dataconsole-dialog-confirm" class="dc-dialog-button dc-dialog-primary" type="button">Добавить</button>
+      </div>
+    </div>
+  </div>
+  <button id="event-button"></button>
+
+  <script>
+    function getCode() {
+      return
+      `	Для каждого рез Из Выгрузка Цикл
+		Для каждого топ Из ВыгрузкаДерево Цикл
+
+			//рез.ИДЛичногоЧатаБитрикс = топ.КоличествоОшибок;
+			//Прервать;
+		КонецЦикла;
+	КонецЦикла;
+`;
+    }
+  </script>
+  <script src="./vs/loader.js"></script>
+  <script src="./parsers.js"></script>
+  <script src="./finder.js"></script>
+  <script src="./bsl_helper.js"></script>
+  <script src="./init.js"></script>
+  <script src="./tree/tree.js"></script>
+  <script src="./workbench.js"></script>
+
+</body>
+
+</html>

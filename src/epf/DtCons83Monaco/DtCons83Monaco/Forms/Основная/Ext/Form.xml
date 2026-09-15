@@ -1968,8 +1968,8 @@
 						<v8:Type>v8:UUID</v8:Type>
 						<v8:TypeSet>cfg:AnyIBRef</v8:TypeSet>
 						<v8:NumberQualifiers>
-							<v8:Digits>10</v8:Digits>
-							<v8:FractionDigits>0</v8:FractionDigits>
+							<v8:Digits>15</v8:Digits>
+							<v8:FractionDigits>5</v8:FractionDigits>
 							<v8:AllowedSign>Any</v8:AllowedSign>
 						</v8:NumberQualifiers>
 						<v8:StringQualifiers>
@@ -2553,6 +2553,9 @@
 			<Type>
 				<v8:Type>xs:boolean</v8:Type>
 			</Type>
+			<Save>
+				<Field>БыстрыеПодсказки</Field>
+			</Save>
 		</Attribute>
 		<Attribute name="ВерсияОбработки" id="21">
 			<Title>
@@ -2579,6 +2582,9 @@
 			<Type>
 				<v8:Type>xs:boolean</v8:Type>
 			</Type>
+			<Save>
+				<Field>ВидимостьКартыКода</Field>
+			</Save>
 		</Attribute>
 		<Attribute name="ВидимостьСтрокиСостояния" id="23">
 			<Title>
@@ -2590,6 +2596,9 @@
 			<Type>
 				<v8:Type>xs:boolean</v8:Type>
 			</Type>
+			<Save>
+				<Field>ВидимостьСтрокиСостояния</Field>
+			</Save>
 		</Attribute>
 		<Attribute name="ГлобальныйМодули" id="24">
 			<Title>
@@ -2701,6 +2710,9 @@
 			<Type>
 				<v8:Type>xs:boolean</v8:Type>
 			</Type>
+			<Save>
+				<Field>ПодсвечиватьЗапросы</Field>
+			</Save>
 		</Attribute>
 		<Attribute name="РазделительПути" id="33">
 			<Title>
@@ -2891,6 +2903,71 @@
 					<v8:AllowedSign>Any</v8:AllowedSign>
 				</v8:NumberQualifiers>
 			</Type>
+		</Attribute>
+		<Attribute name="ТемаРедактораMonaco" id="46">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Тема редактора Monaco</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:string</v8:Type>
+				<v8:StringQualifiers>
+					<v8:Length>5</v8:Length>
+					<v8:AllowedLength>Variable</v8:AllowedLength>
+				</v8:StringQualifiers>
+			</Type>
+			<Save>
+				<Field>ТемаРедактораMonaco</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="РазмерШрифтаРедактораMonaco" id="47">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Размер шрифта редактора Monaco</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:decimal</v8:Type>
+				<v8:NumberQualifiers>
+					<v8:Digits>2</v8:Digits>
+					<v8:FractionDigits>0</v8:FractionDigits>
+					<v8:AllowedSign>Nonnegative</v8:AllowedSign>
+				</v8:NumberQualifiers>
+			</Type>
+			<Save>
+				<Field>РазмерШрифтаРедактораMonaco</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ОтображатьНомераСтрокРедактораMonaco" id="48">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Отображать номера строк редактора Monaco</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+			<Save>
+				<Field>ОтображатьНомераСтрокРедактораMonaco</Field>
+			</Save>
+		</Attribute>
+		<Attribute name="ПереноситьДлинныеСтрокиРедактораMonaco" id="49">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Переносить длинные строки редактора Monaco</v8:content>
+				</v8:item>
+			</Title>
+			<Type>
+				<v8:Type>xs:boolean</v8:Type>
+			</Type>
+			<Save>
+				<Field>ПереноситьДлинныеСтрокиРедактораMonaco</Field>
+			</Save>
 		</Attribute>
 		<Attribute name="ПодсказкаПоПараметрам" id="4">
 			<Type>
