@@ -38,6 +38,8 @@
     ]
   };
 
+  var INITIALIZATION_OPERATION_ID = "workspace-initialization";
+
   var state = {
     workspace: null,
     algorithms: new Map(),
@@ -69,8 +71,8 @@
     parametersVisible: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
-    workspaceBusy: false,
-    workspaceBusyOperationId: "",
+    workspaceBusy: true,
+    workspaceBusyOperationId: INITIALIZATION_OPERATION_ID,
     sidebarWidth: 260,
     parametersWidth: 280
   };
@@ -1516,6 +1518,20 @@
     }
   }
 
+  function finishWorkspaceInitialization() {
+    if (state.workspaceBusyOperationId !== INITIALIZATION_OPERATION_ID) {
+      return;
+    }
+
+    state.workspaceBusy = false;
+    state.workspaceBusyOperationId = "";
+    elements.workbench.setAttribute("aria-busy", "false");
+    elements.workspaceBusy.hidden = true;
+    elements.workspaceBusyFile.textContent = "";
+    elements.workspaceBusyFile.hidden = true;
+    renderFileState();
+  }
+
   function renderWorkspace() {
     if (!elements.tree) {
       cacheElements();
@@ -1751,6 +1767,8 @@
       };
     } catch (error) {
       return reportError("loadWorkspace", error);
+    } finally {
+      finishWorkspaceInitialization();
     }
   }
 
