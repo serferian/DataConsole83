@@ -65,6 +65,7 @@
     searchQuery: "",
     searchTimer: null,
     sidebarVisible: true,
+    sidebarScrollTop: 0,
     parametersVisible: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
@@ -2024,9 +2025,29 @@
       if (typeof visible !== "boolean") {
         throw new Error("setSidebarVisible ожидает Булево.");
       }
+      if (!visible && state.sidebarVisible && elements.tree) {
+        state.sidebarScrollTop = elements.tree.scrollTop;
+      }
+      var restoringSidebar = visible && !state.sidebarVisible;
       state.sidebarVisible = visible;
       elements.workbench.classList.toggle("dc-sidebar-hidden", !visible);
       elements.togglePrimarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
+      if (restoringSidebar) {
+        setSidebarWidth(state.sidebarWidth);
+        var searchResults = state.workspace && state.searchQuery
+          ? collectSearchResults(state.workspace.algorithms, state.searchQuery)
+          : null;
+        var hasExpectedTreeNodes = Boolean(state.workspace && (
+          searchResults ? searchResults.visible.size > 0 : state.workspace.algorithms.length > 0
+        ));
+        if (hasExpectedTreeNodes && (!elements.tree.firstChild || state.algorithmNodes.size === 0)) {
+          renderWorkspace();
+        } else {
+          updateRenderedAlgorithmStates();
+        }
+        elements.tree.scrollTop = state.sidebarScrollTop;
+        void elements.explorer.offsetWidth;
+      }
       window.setTimeout(function () {
         if (state.editor) {
           state.editor.layout();
