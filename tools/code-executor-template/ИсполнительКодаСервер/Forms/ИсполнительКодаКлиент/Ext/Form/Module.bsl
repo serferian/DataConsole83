@@ -1,3 +1,6 @@
+&НаКлиенте
+Перем SPd201bf6 Экспорт;
+
 // __DC83_FORM_MODULE_SLOT_START__
 // __DC83_FORM_MODULE_SLOT_CONTENT__
 // __DC83_FORM_MODULE_SLOT_END__
