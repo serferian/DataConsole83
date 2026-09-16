@@ -4,6 +4,11 @@ DataConsole83 — внешняя управляемая обработка `DtCo
 
 Пользовательские сценарии и все команды консоли описаны в [руководстве пользователя](docs/code-console-user-guide.md). Подробная карта модулей, потоков и интеграционных контрактов находится в [индексе проекта](docs/project-index.md). Правила для AI-агентов описаны в [AGENTS.md](AGENTS.md) и `.cursor/rules/`.
 
+## Базовые проекты
+
+- Основа и идея обработки: [dtcons83.epf](https://bitbucket.org/vptn/dtcons83.epf).
+- Редактор Monaco: [bsl_console](https://github.com/salexdv/bsl_console) v0.3.2.
+
 ## Возможности
 
 - дерево алгоритмов с сохранением в файл и восстановлением;
