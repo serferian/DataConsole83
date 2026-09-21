@@ -62,6 +62,11 @@
     globalSaveHandlerInstalled: false,
     dialogConfirm: null,
     dialogRestoreFocus: null,
+    dialogPending: false,
+    dialogWaitForWorkspaceUpdate: false,
+    dialogConfirmLabel: "",
+    dialogPendingLabel: "",
+    dialogPendingMessage: "",
     searchQuery: "",
     searchTimer: null,
     sidebarVisible: true,
@@ -471,6 +476,106 @@
       documents: documents,
       orderedDocuments: orderedDocuments
     };
+  }
+
+  function setAlgorithmDepth(algorithm, parentId, depth) {
+    algorithm.parentId = parentId;
+    algorithm.depth = depth;
+    algorithm.children.forEach(function (child) {
+      setAlgorithmDepth(child, algorithm.id, depth + 1);
+    });
+  }
+
+  function collectAlgorithmTree(algorithm, algorithms, documents) {
+    algorithms.push(algorithm);
+    algorithm.documents.forEach(function (documentItem) {
+      documents.push(documentItem);
+    });
+    algorithm.children.forEach(function (child) {
+      collectAlgorithmTree(child, algorithms, documents);
+    });
+  }
+
+  function registerAlgorithmTree(algorithm) {
+    state.algorithms.set(algorithm.id, algorithm);
+    algorithm.documents.forEach(function (documentItem) {
+      state.documents.set(documentItem.id, documentItem);
+    });
+    algorithm.children.forEach(registerAlgorithmTree);
+  }
+
+  function ensureAlgorithmChildrenContainer(rendered) {
+    var children = rendered.body.querySelector(".dc-children");
+    if (!children) {
+      children = document.createElement("div");
+      children.className = "dc-children";
+      children.setAttribute("role", "group");
+      rendered.body.appendChild(children);
+    }
+    rendered.twistie.classList.remove("dc-twistie-empty");
+    rendered.twistie.tabIndex = 0;
+    return children;
+  }
+
+  function updateRenderedAlgorithmChildrenState(algorithmId) {
+    var algorithm = state.algorithms.get(algorithmId);
+    var rendered = state.algorithmNodes.get(algorithmId);
+    if (!algorithm || !rendered) {
+      return;
+    }
+    var hasChildren = algorithm.children.length > 0;
+    if (!hasChildren) {
+      var children = rendered.body.querySelector(".dc-children");
+      if (children) {
+        rendered.body.removeChild(children);
+      }
+      rendered.twistie.classList.add("dc-twistie-empty");
+      rendered.twistie.tabIndex = -1;
+      rendered.twistie.setAttribute("aria-expanded", "false");
+      rendered.twistie.setAttribute("aria-label", "Развернуть " + algorithm.name);
+    } else {
+      rendered.twistie.classList.remove("dc-twistie-empty");
+      rendered.twistie.tabIndex = 0;
+    }
+  }
+
+  function clearActiveDocument() {
+    saveActiveViewState();
+    if (state.editor && state.legacyModel && !state.legacyModel.isDisposed()) {
+      state.editor.setModel(state.legacyModel);
+    }
+    state.activeDocumentId = null;
+    state.pendingDocumentId = null;
+    if (elements.editorEmpty) {
+      elements.editorEmpty.hidden = false;
+    }
+    updateModeBar();
+    if (state.editor) {
+      state.editor.layout();
+    }
+  }
+
+  function completePendingWorkspaceMutation() {
+    if (!state.dialogPending) {
+      return;
+    }
+    state.dialogRestoreFocus = null;
+    closeWorkbenchDialog(true);
+  }
+
+  function failPendingWorkspaceMutation(description) {
+    if (!state.dialogPending) {
+      return;
+    }
+    state.dialogPending = false;
+    elements.dialogBackdrop.removeAttribute("aria-busy");
+    elements.dialogInput.disabled = false;
+    elements.dialogCancel.disabled = false;
+    elements.dialogConfirm.disabled = false;
+    elements.dialogConfirm.textContent = state.dialogConfirmLabel || "Продолжить";
+    elements.dialogError.textContent = description || "Не удалось выполнить операцию.";
+    elements.dialogError.hidden = false;
+    elements.dialogConfirm.focus();
   }
 
   function appendTextElement(parent, tagName, className, text) {
@@ -1220,9 +1325,21 @@
     return state.algorithms.get(state.selectedAlgorithmId) || null;
   }
 
-  function closeWorkbenchDialog() {
+  function closeWorkbenchDialog(force) {
+    if (state.dialogPending && !force) {
+      return;
+    }
     elements.dialogBackdrop.hidden = true;
+    elements.dialogBackdrop.removeAttribute("aria-busy");
     state.dialogConfirm = null;
+    state.dialogPending = false;
+    state.dialogWaitForWorkspaceUpdate = false;
+    state.dialogConfirmLabel = "";
+    state.dialogPendingLabel = "";
+    state.dialogPendingMessage = "";
+    elements.dialogInput.disabled = false;
+    elements.dialogCancel.disabled = false;
+    elements.dialogConfirm.disabled = false;
     elements.dialogError.hidden = true;
     elements.dialogError.textContent = "";
     if (state.dialogRestoreFocus && typeof state.dialogRestoreFocus.focus === "function") {
@@ -1234,14 +1351,23 @@
   function showWorkbenchDialog(options) {
     state.dialogConfirm = options.onConfirm;
     state.dialogRestoreFocus = document.activeElement;
+    state.dialogPending = false;
+    state.dialogWaitForWorkspaceUpdate = Boolean(options.waitForWorkspaceUpdate);
+    state.dialogConfirmLabel = options.confirmLabel || "Продолжить";
+    state.dialogPendingLabel = options.pendingLabel || "Выполняется…";
+    state.dialogPendingMessage = options.pendingMessage || "Подождите, операция выполняется.";
     elements.dialogTitle.textContent = options.title;
     elements.dialogMessage.textContent = options.message || "";
     elements.dialogInput.hidden = !options.requiresName;
+    elements.dialogInput.disabled = false;
     elements.dialogInput.value = options.value || "";
     elements.dialogInput.setAttribute("aria-label", options.inputLabel || options.title);
     elements.dialogError.hidden = true;
     elements.dialogError.textContent = "";
-    elements.dialogConfirm.textContent = options.confirmLabel || "Продолжить";
+    elements.dialogCancel.disabled = false;
+    elements.dialogConfirm.disabled = false;
+    elements.dialogConfirm.textContent = state.dialogConfirmLabel;
+    elements.dialogBackdrop.removeAttribute("aria-busy");
     elements.dialogBackdrop.hidden = false;
     window.setTimeout(function () {
       if (options.requiresName) {
@@ -1254,6 +1380,9 @@
   }
 
   function confirmWorkbenchDialog() {
+    if (state.dialogPending) {
+      return;
+    }
     if (typeof state.dialogConfirm !== "function") {
       closeWorkbenchDialog();
       return;
@@ -1266,7 +1395,17 @@
       elements.dialogInput.focus();
       return;
     }
-    closeWorkbenchDialog();
+    if (state.dialogWaitForWorkspaceUpdate) {
+      state.dialogPending = true;
+      elements.dialogBackdrop.setAttribute("aria-busy", "true");
+      elements.dialogMessage.textContent = state.dialogPendingMessage;
+      elements.dialogInput.disabled = true;
+      elements.dialogCancel.disabled = true;
+      elements.dialogConfirm.disabled = true;
+      elements.dialogConfirm.textContent = state.dialogPendingLabel;
+    } else {
+      closeWorkbenchDialog();
+    }
     confirmAction(value);
   }
 
@@ -1311,6 +1450,9 @@
       inputLabel: "Наименование алгоритма",
       requiresName: true,
       confirmLabel: "Добавить",
+      pendingLabel: "Добавление…",
+      pendingMessage: "Добавление алгоритма. Подождите…",
+      waitForWorkspaceUpdate: true,
       onConfirm: function (name) {
         requestWorkspaceMutation("add-algorithm", { name: name, parentAlgorithmId: parentAlgorithmId });
       }
@@ -1346,6 +1488,9 @@
       message: "Удалить «" + algorithm.name + "» вместе с вложенными алгоритмами и их параметрами?",
       requiresName: false,
       confirmLabel: "Удалить",
+      pendingLabel: "Удаление…",
+      pendingMessage: "Удаление алгоритма. Подождите…",
+      waitForWorkspaceUpdate: true,
       onConfirm: function () {
         requestWorkspaceMutation("delete-algorithm", {});
       }
@@ -1892,6 +2037,71 @@
       if (!operation || typeof operation !== "object") {
         throw new Error("Операция patch должна быть объектом.");
       }
+      if (operation.op === "addAlgorithm") {
+        var parentAlgorithmId = operation.parentAlgorithmId === undefined || operation.parentAlgorithmId === null
+          ? ""
+          : String(operation.parentAlgorithmId);
+        if (parentAlgorithmId && !state.algorithms.has(parentAlgorithmId)) {
+          throw new Error("Родительский алгоритм не найден: " + parentAlgorithmId + ".");
+        }
+        var indexedAlgorithm = validateAndIndexWorkspace({
+          sessionId: state.workspace.sessionId,
+          algorithms: [operation.algorithm],
+          tables: [],
+          settings: {}
+        });
+        var addedAlgorithms = [];
+        var addedDocuments = [];
+        collectAlgorithmTree(indexedAlgorithm.workspace.algorithms[0], addedAlgorithms, addedDocuments);
+        addedAlgorithms.forEach(function (algorithm) {
+          if (state.algorithms.has(algorithm.id)) {
+            throw new Error("Повторяется идентификатор алгоритма: " + algorithm.id + ".");
+          }
+        });
+        addedDocuments.forEach(function (documentItem) {
+          if (state.documents.has(documentItem.id)) {
+            throw new Error("Повторяется идентификатор документа: " + documentItem.id + ".");
+          }
+        });
+        setAlgorithmDepth(indexedAlgorithm.workspace.algorithms[0], parentAlgorithmId || null,
+          parentAlgorithmId ? state.algorithms.get(parentAlgorithmId).depth + 1 : 0);
+        operation.normalizedAlgorithm = indexedAlgorithm.workspace.algorithms[0];
+        operation.normalizedSelectedAlgorithmId = requiredIdentity(
+          operation.selectedAlgorithmId === undefined || operation.selectedAlgorithmId === null
+            ? operation.normalizedAlgorithm.id
+            : operation.selectedAlgorithmId,
+          "operation.selectedAlgorithmId");
+        if (!addedAlgorithms.some(function (algorithm) {
+          return algorithm.id === operation.normalizedSelectedAlgorithmId;
+        })) {
+          throw new Error("Выбранный алгоритм не входит в добавляемую ветку.");
+        }
+        return;
+      }
+      if (operation.op === "removeAlgorithm") {
+        var removeAlgorithmId = requiredIdentity(operation.algorithmId, "operation.algorithmId");
+        if (!state.algorithms.has(removeAlgorithmId)) {
+          throw new Error("Алгоритм не найден: " + removeAlgorithmId + ".");
+        }
+        operation.algorithmId = removeAlgorithmId;
+        operation.normalizedSelectedAlgorithmId = operation.selectedAlgorithmId === undefined
+          || operation.selectedAlgorithmId === null
+          ? ""
+          : String(operation.selectedAlgorithmId);
+        if (operation.normalizedSelectedAlgorithmId) {
+          if (!state.algorithms.has(operation.normalizedSelectedAlgorithmId)) {
+            throw new Error("Выбранный алгоритм не найден: " + operation.normalizedSelectedAlgorithmId + ".");
+          }
+          var removedAlgorithmIds = [];
+          collectAlgorithmTree(state.algorithms.get(removeAlgorithmId), removedAlgorithmIds, []);
+          if (removedAlgorithmIds.some(function (algorithm) {
+            return algorithm.id === operation.normalizedSelectedAlgorithmId;
+          })) {
+            throw new Error("После удаления выбран удаляемый алгоритм.");
+          }
+        }
+        return;
+      }
       if (operation.op === "replaceDocumentText") {
         requiredIdentity(operation.documentId, "operation.documentId");
         if (!state.documents.has(String(operation.documentId))) {
@@ -1994,6 +2204,135 @@
     return operations;
   }
 
+  function applyAddAlgorithmPatch(operation) {
+    var algorithm = operation.normalizedAlgorithm;
+    var parentAlgorithm = algorithm.parentId ? state.algorithms.get(algorithm.parentId) : null;
+    var renderedParent;
+    var renderedNode;
+    var targetAlgorithm;
+    var targetDocument;
+
+    registerAlgorithmTree(algorithm);
+    if (parentAlgorithm) {
+      parentAlgorithm.children.push(algorithm);
+    } else {
+      state.workspace.algorithms.push(algorithm);
+    }
+    state.workspace.modified = operation.modified === undefined ? true : Boolean(operation.modified);
+    state.workspace.selectedAlgorithmId = operation.normalizedSelectedAlgorithmId;
+
+    if (state.searchQuery) {
+      renderWorkspace();
+    } else {
+      renderedParent = parentAlgorithm ? state.algorithmNodes.get(parentAlgorithm.id) : null;
+      renderedNode = createAlgorithmNode(
+        algorithm,
+        parentAlgorithm ? parentAlgorithm.children.length - 1 : state.workspace.algorithms.length - 1,
+        null
+      );
+      if (renderedParent) {
+        ensureAlgorithmChildrenContainer(renderedParent).appendChild(renderedNode);
+        updateRenderedAlgorithmChildrenState(parentAlgorithm.id);
+      } else {
+        elements.tree.appendChild(renderedNode);
+      }
+      elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0;
+      elements.searchEmpty.hidden = true;
+    }
+
+    state.selectedParameterId = null;
+    targetAlgorithm = state.algorithms.get(operation.normalizedSelectedAlgorithmId);
+    if (targetAlgorithm) {
+      selectAlgorithmInTree(targetAlgorithm.id, true);
+      targetDocument = preferredDocumentForAlgorithm(targetAlgorithm);
+      if (targetDocument) {
+        activateDocumentById(targetDocument.id, false);
+      } else {
+        clearActiveDocument();
+      }
+    } else {
+      clearActiveDocument();
+    }
+    renderFileState();
+    completePendingWorkspaceMutation();
+  }
+
+  function applyRemoveAlgorithmPatch(operation) {
+    var algorithm = state.algorithms.get(operation.algorithmId);
+    var parentAlgorithm = algorithm.parentId ? state.algorithms.get(algorithm.parentId) : null;
+    var removedAlgorithms = [];
+    var removedDocuments = [];
+    var rendered = state.algorithmNodes.get(algorithm.id);
+    var selectedAlgorithm;
+    var selectedDocument;
+
+    collectAlgorithmTree(algorithm, removedAlgorithms, removedDocuments);
+    if (state.activeDocumentId && removedDocuments.some(function (documentItem) {
+      return documentItem.id === state.activeDocumentId;
+    })) {
+      clearActiveDocument();
+    }
+
+    if (parentAlgorithm) {
+      parentAlgorithm.children = parentAlgorithm.children.filter(function (child) {
+        return child.id !== algorithm.id;
+      });
+    } else {
+      state.workspace.algorithms = state.workspace.algorithms.filter(function (root) {
+        return root.id !== algorithm.id;
+      });
+    }
+
+    removedDocuments.forEach(function (documentItem) {
+      state.documentButtons.delete(documentItem.id);
+      var model = state.models.get(documentItem.id);
+      if (model && !model.isDisposed()) {
+        model.dispose();
+      }
+      state.models.delete(documentItem.id);
+      state.viewStates.delete(documentItem.id);
+      state.documents.delete(documentItem.id);
+    });
+    removedAlgorithms.forEach(function (removedAlgorithm) {
+      state.algorithmNodes.delete(removedAlgorithm.id);
+      state.algorithms.delete(removedAlgorithm.id);
+      state.expandedAlgorithms.delete(removedAlgorithm.id);
+      state.searchExpandedAlgorithms.delete(removedAlgorithm.id);
+    });
+    if (rendered && rendered.node.parentNode) {
+      rendered.node.parentNode.removeChild(rendered.node);
+    }
+    if (parentAlgorithm) {
+      updateRenderedAlgorithmChildrenState(parentAlgorithm.id);
+    }
+
+    state.workspace.modified = operation.modified === undefined ? true : Boolean(operation.modified);
+    state.workspace.selectedAlgorithmId = operation.normalizedSelectedAlgorithmId;
+    state.selectedParameterId = null;
+    if (state.searchQuery) {
+      renderWorkspace();
+    } else {
+      elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0;
+      elements.searchEmpty.hidden = true;
+    }
+
+    selectedAlgorithm = state.algorithms.get(operation.normalizedSelectedAlgorithmId);
+    if (selectedAlgorithm) {
+      selectAlgorithmInTree(selectedAlgorithm.id, true);
+      selectedDocument = preferredDocumentForAlgorithm(selectedAlgorithm);
+      if (selectedDocument) {
+        activateDocumentById(selectedDocument.id, false);
+      } else {
+        clearActiveDocument();
+      }
+    } else {
+      state.selectedAlgorithmId = null;
+      clearActiveDocument();
+    }
+    renderFileState();
+    completePendingWorkspaceMutation();
+  }
+
   function applyPatch(patchJson) {
     try {
       if (!state.workspace) {
@@ -2002,7 +2341,11 @@
       var patch = parseJsonValue(patchJson, "applyPatch");
       var operations = validatePatch(patch);
       operations.forEach(function (operation) {
-        if (operation.op === "replaceDocumentText") {
+        if (operation.op === "addAlgorithm") {
+          applyAddAlgorithmPatch(operation);
+        } else if (operation.op === "removeAlgorithm") {
+          applyRemoveAlgorithmPatch(operation);
+        } else if (operation.op === "replaceDocumentText") {
           var documentItem = state.documents.get(String(operation.documentId));
           documentItem.text = String(operation.text);
           documentItem.hasContent = operation.hasContent === undefined
@@ -2111,6 +2454,7 @@
       }
       return { success: true, applied: operations.length };
     } catch (error) {
+      failPendingWorkspaceMutation(error.message);
       return reportError("applyPatch", error);
     }
   }
