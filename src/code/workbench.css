@@ -468,6 +468,10 @@ html.dc-theme-dark .dc-tree-document-button.dc-has-content { color: #171717; }
   display: none;
 }
 
+.dc-empty-retry {
+  margin-top: 4px;
+}
+
 .dc-empty-spinner {
   width: 16px;
   height: 16px;

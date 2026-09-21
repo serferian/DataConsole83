@@ -70,6 +70,8 @@
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
     workspaceInitialized: false,
+    initializationRetryTimer: null,
+    initializationRetryVisible: false,
     workspaceBusy: false,
     workspaceBusyOperationId: "",
     sidebarWidth: 260,
@@ -100,6 +102,7 @@
     elements.searchEmpty = byId("dataconsole-search-empty");
     elements.explorerEmpty = byId("dataconsole-explorer-empty");
     elements.emptyInitializing = byId("dataconsole-empty-initializing");
+    elements.emptyRetry = byId("dataconsole-empty-retry");
     elements.emptyOpen = byId("dataconsole-empty-open");
     elements.editorEmpty = byId("dataconsole-editor-empty");
     elements.editorShell = byId("dataconsole-editor-shell");
@@ -1555,8 +1558,36 @@
     elements.saveWorkspace.disabled = !canChange;
     elements.saveWorkspaceAs.disabled = !canChange;
     elements.emptyInitializing.hidden = state.workspaceInitialized;
+    elements.emptyRetry.hidden = state.workspaceInitialized || !state.initializationRetryVisible;
     elements.emptyOpen.hidden = !state.workspaceInitialized;
     elements.emptyOpen.disabled = state.workspaceBusy;
+  }
+
+  function scheduleInitializationRetry() {
+    if (state.initializationRetryTimer !== null) {
+      window.clearTimeout(state.initializationRetryTimer);
+    }
+    state.initializationRetryVisible = false;
+    state.initializationRetryTimer = window.setTimeout(function () {
+      state.initializationRetryTimer = null;
+      if (!state.workspaceInitialized) {
+        state.initializationRetryVisible = true;
+        renderFileState();
+      }
+    }, 15000);
+  }
+
+  function retryInitializationAfterCacheClear() {
+    if (state.workspaceInitialized || typeof window.sendEvent !== "function") {
+      return;
+    }
+    elements.emptyRetry.disabled = true;
+    window.setTimeout(function () {
+      if (!state.workspaceInitialized && elements.emptyRetry) {
+        elements.emptyRetry.disabled = false;
+      }
+    }, 3000);
+    emitBridgeEvent("EVENT_WORKSPACE_CACHE_RESET_REQUESTED", {});
   }
 
   function setWorkspaceBusy(payloadJson) {
@@ -1830,6 +1861,11 @@
         activateDocumentById(nextDocument.id, false);
       }
       state.workspaceInitialized = true;
+      state.initializationRetryVisible = false;
+      if (state.initializationRetryTimer !== null) {
+        window.clearTimeout(state.initializationRetryTimer);
+        state.initializationRetryTimer = null;
+      }
       renderFileState();
       return {
         success: true,
@@ -2448,6 +2484,8 @@
     elements.saveWorkspace.addEventListener("click", function () { requestWorkspaceSave(false); });
     elements.saveWorkspaceAs.addEventListener("click", function () { requestWorkspaceSave(true); });
     elements.emptyOpen.addEventListener("click", requestWorkspaceOpen);
+    elements.emptyRetry.addEventListener("click", retryInitializationAfterCacheClear);
+    scheduleInitializationRetry();
     if (!state.globalSaveHandlerInstalled) {
       document.addEventListener("keydown", function (event) {
         var key = String(event.key || "").toLowerCase();
