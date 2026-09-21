@@ -1293,7 +1293,13 @@
     if (!state.workspace || !state.workspace.canExecute) {
       return;
     }
-    emitBridgeEvent("EVENT_WORKSPACE_MUTATION_REQUESTED", mutationPayload(action, additional));
+
+    // Give the HTML document a chance to paint the closed dialog before the
+    // synchronous 1C event handler rebuilds the workspace.
+    var payload = mutationPayload(action, additional);
+    window.setTimeout(function () {
+      emitBridgeEvent("EVENT_WORKSPACE_MUTATION_REQUESTED", payload);
+    }, 0);
   }
 
   function addAlgorithmFromUi(asChild) {
