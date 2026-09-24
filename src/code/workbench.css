@@ -902,9 +902,12 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 }
 
 .dc-secondary-divider {
-  flex: 0 0 1px;
-  height: 1px;
-  background: var(--dc-border);
+  flex: 0 0 7px;
+  height: 7px;
+  border-top: 1px solid var(--dc-border);
+  border-bottom: 1px solid var(--dc-border);
+  background: var(--dc-editor-surface);
+  box-sizing: border-box;
 }
 .dc-settings-section[hidden] { display: none; }
 .dc-parameters-pane.dc-settings-visible .dc-parameters-section,
@@ -1016,6 +1019,8 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   min-height: 50px;
   padding: 7px 8px 7px 11px;
   border-bottom: 1px solid var(--dc-border);
+  box-shadow: inset 3px 0 0 var(--dc-selected-edge);
+  background: var(--dc-chrome-raised);
   box-sizing: border-box;
 }
 
@@ -1073,6 +1078,8 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   padding: 5px 8px 5px 11px;
   border-bottom: 1px solid var(--dc-border);
   align-items: center;
+  box-shadow: inset 3px 0 0 var(--dc-selected-edge);
+  background: var(--dc-chrome-raised);
   box-sizing: border-box;
 }
 .dc-tables-title { flex: 1 1 auto; font-size: 10px; font-weight: 700; letter-spacing: .07em; }
