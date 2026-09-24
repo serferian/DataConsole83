@@ -1002,12 +1002,14 @@
         button.title = descriptor.title;
         button.setAttribute("aria-label", descriptor.title);
         button.disabled = !state.workspace.canExecute;
-        if (descriptor.icon !== "clear") {
-          var icon = document.createElement("span");
-          icon.className = "dc-parameter-value-icon dc-parameter-value-icon-" + descriptor.icon;
-          icon.setAttribute("aria-hidden", "true");
-          button.appendChild(icon);
+        var icon = document.createElement(descriptor.icon === "clear" ? "img" : "span");
+        icon.className = "dc-parameter-value-icon dc-parameter-value-icon-" + descriptor.icon;
+        icon.setAttribute("aria-hidden", "true");
+        if (descriptor.icon === "clear") {
+          icon.src = "tree/icons/actions/clear.svg";
+          icon.alt = "";
         }
+        button.appendChild(icon);
         button.addEventListener("click", function (event) {
           selectParameter(parameter.id);
           requestParameterEdit(descriptor.action, algorithm.id, parameter.id);

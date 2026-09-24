@@ -158,6 +158,14 @@ html.dc-theme-dark {
   opacity: .35;
 }
 
+.dc-action-image {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 4px auto;
+  object-fit: contain;
+}
+
 .dc-search-row {
   flex: 0 0 auto;
   padding: 7px 8px;
@@ -1016,22 +1024,8 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 .dc-parameters-algorithm { overflow: hidden; color: var(--dc-muted); font-size: 11px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .dc-parameters-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; margin-left: 6px; }
 .dc-parameter-edit-action,
-.dc-parameter-clear-action { font-size: 14px; line-height: 22px; }
-.dc-parameter-copy-action { position: relative; }
-.dc-parameter-copy-action::before,
-.dc-parameter-copy-action::after {
-  position: absolute;
-  width: 9px;
-  height: 11px;
-  border: 1px solid currentColor;
-  border-radius: 1px;
-  box-sizing: border-box;
-  content: "";
-}
-.dc-parameter-copy-action::before { top: 6px; left: 7px; }
-.dc-parameter-copy-action::after { top: 9px; left: 10px; background: var(--dc-panel); }
-.dc-parameter-copy-action:hover:not(:disabled)::after { background: var(--dc-hover); }
-.dc-parameter-clear-action { font-size: 17px; font-weight: 400; }
+.dc-parameter-clear-action { line-height: 22px; }
+.dc-parameter-clear-action { font-weight: 400; }
 .dc-fill-parameters { flex: 0 0 auto; height: 25px; padding: 0 7px; line-height: 23px; }
 .dc-fill-parameters[hidden] { display: none; }
 .dc-parameters-list { flex: 1 1 auto; min-height: 0; padding: 5px 0 12px; overflow-y: auto; }
@@ -1070,12 +1064,7 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 .dc-parameter-value-icon-number { background-image: url("tree/icons/int.png"); }
 .dc-parameter-value-icon-list { background-image: url("tree/icons/array.png"); }
 .dc-parameter-value-icon-other { background-image: url("tree/icons/keyvalue.png"); }
-.dc-parameter-value-action-clear {
-  color: var(--dc-text);
-  background-image: none;
-  font: 400 18px/16px "Segoe UI", Arial, sans-serif;
-}
-.dc-parameter-value-action-clear::before { content: "\00d7"; }
+.dc-parameter-value-icon-clear { object-fit: contain; }
 
 .dc-tables-header {
   display: flex;
