@@ -1733,16 +1733,15 @@
     if (state.workspaceInitialized || !eventButton) {
       return;
     }
-    elements.emptyRetry.disabled = true;
-    window.setTimeout(function () {
-      if (!state.workspaceInitialized && elements.emptyRetry) {
-        elements.emptyRetry.disabled = false;
-      }
-    }, 3000);
+    state.initializationRetryVisible = false;
+    renderFileState();
     var eventData = {
       event: "EVENT_WORKSPACE_CACHE_RESET_REQUESTED",
       params: {}
     };
+    if (Array.isArray(window.events_queue)) {
+      window.events_queue.push(eventData);
+    }
     var attachEventData = function (event) {
       event.eventData1C = eventData;
     };
