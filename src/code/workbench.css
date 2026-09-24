@@ -96,7 +96,15 @@ html.dc-theme-dark {
   flex: 1 1 100%;
 }
 
+.dc-explorer-title-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .dc-explorer-title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 11px;
   font-weight: 700;
   line-height: 16px;
@@ -119,6 +127,14 @@ html.dc-theme-dark {
   justify-content: flex-end;
   gap: 2px;
   margin-top: 4px;
+}
+
+.dc-file-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
 }
 
 .dc-icon-button {
@@ -598,13 +614,6 @@ body.dc-resizing {
 .dc-layout-secondary::before { right: 0; border-radius: 0 1px 1px 0; }
 .dc-settings-glyph { font: 16px/1 "Segoe UI Symbol", "Segoe UI", Arial, sans-serif; }
 .dc-file-action { font: 14px/1 "Segoe UI Symbol", "Segoe UI", Arial, sans-serif; }
-.dc-explorer-action-separator {
-  align-self: center;
-  width: 1px;
-  height: 16px;
-  margin: 0 2px;
-  background: var(--dc-border);
-}
 .dc-file-name.dc-modified::after { color: var(--dc-focus); content: " •"; }
 
 .dc-mode-tab {

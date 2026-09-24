@@ -16,19 +16,22 @@
     <aside id="dataconsole-explorer" class="dc-explorer" aria-label="Проводник алгоритмов">
       <div class="dc-explorer-header">
         <div class="dc-explorer-heading">
-          <div class="dc-explorer-title">АЛГОРИТМЫ</div>
+          <div class="dc-explorer-title-row">
+            <div class="dc-explorer-title">АЛГОРИТМЫ</div>
+            <div class="dc-file-actions" aria-label="Операции с файлом алгоритмов">
+              <button id="dataconsole-new-workspace" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Создать файл алгоритмов" title="Новый файл алгоритмов">◇</button>
+              <button id="dataconsole-open-workspace" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Открыть файл алгоритмов" title="Открыть файл алгоритмов">↗</button>
+              <button id="dataconsole-save-workspace" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Сохранить файл алгоритмов" title="Сохранить файл алгоритмов (Ctrl+S)">↓</button>
+              <button id="dataconsole-save-workspace-as" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Сохранить файл алгоритмов как" title="Сохранить файл алгоритмов как">⇲</button>
+            </div>
+          </div>
           <div id="dataconsole-file-name" class="dc-file-name">Рабочая область не открыта</div>
         </div>
         <div class="dc-explorer-actions">
-          <button id="dataconsole-new-workspace" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Создать файл алгоритмов" title="Новый файл алгоритмов">◇</button>
-          <button id="dataconsole-open-workspace" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Открыть файл алгоритмов" title="Открыть файл алгоритмов">↗</button>
-          <button id="dataconsole-save-workspace" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Сохранить файл алгоритмов" title="Сохранить файл алгоритмов (Ctrl+S)">↓</button>
-          <button id="dataconsole-save-workspace-as" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Сохранить файл алгоритмов как" title="Сохранить файл алгоритмов как">⇲</button>
-          <span class="dc-explorer-action-separator" aria-hidden="true"></span>
           <button id="dataconsole-add-algorithm" class="dc-icon-button" type="button"
             aria-label="Добавить алгоритм" title="Добавить алгоритм рядом">+</button>
           <button id="dataconsole-add-child-algorithm" class="dc-icon-button" type="button"
