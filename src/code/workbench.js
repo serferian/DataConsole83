@@ -1729,7 +1729,8 @@
   }
 
   function retryInitializationAfterCacheClear() {
-    if (state.workspaceInitialized || typeof window.sendEvent !== "function") {
+    var eventButton = byId("event-button");
+    if (state.workspaceInitialized || !eventButton) {
       return;
     }
     elements.emptyRetry.disabled = true;
@@ -1738,7 +1739,19 @@
         elements.emptyRetry.disabled = false;
       }
     }, 3000);
-    emitBridgeEvent("EVENT_WORKSPACE_CACHE_RESET_REQUESTED", {});
+    var eventData = {
+      event: "EVENT_WORKSPACE_CACHE_RESET_REQUESTED",
+      params: {}
+    };
+    var attachEventData = function (event) {
+      event.eventData1C = eventData;
+    };
+    eventButton.addEventListener("click", attachEventData, true);
+    try {
+      eventButton.click();
+    } finally {
+      eventButton.removeEventListener("click", attachEventData, true);
+    }
   }
 
   function setWorkspaceBusy(payloadJson) {
