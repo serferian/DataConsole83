@@ -3082,9 +3082,18 @@
   }
 
   function requestWorkspaceSave(saveAs) {
-    requestWorkspaceFileAction(saveAs
+    if (state.workspaceBusy || !state.workspace || !state.workspace.canExecute) {
+      return;
+    }
+    var snapshot = getWorkspaceSnapshot();
+    if (!snapshot || typeof snapshot !== "string") {
+      return;
+    }
+    var payload = mutationPayload(saveAs ? "save-workspace-as" : "save-workspace", {});
+    payload.workspaceJson = snapshot;
+    emitBridgeEvent(saveAs
       ? "EVENT_WORKSPACE_SAVE_AS_REQUESTED"
-      : "EVENT_WORKSPACE_SAVE_REQUESTED", saveAs ? "save-workspace-as" : "save-workspace", true);
+      : "EVENT_WORKSPACE_SAVE_REQUESTED", payload);
   }
 
   function requestQueryConstructor() {
