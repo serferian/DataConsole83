@@ -97,6 +97,18 @@
     if (tablesSection) {
       tablesSection.classList.toggle("dc-section-collapsed", !state.tablesSectionExpanded);
     }
+    if (elements.parameters) {
+      elements.parameters.classList.toggle("dc-parameters-collapsed", !state.parametersSectionExpanded);
+      elements.parameters.classList.toggle("dc-tables-collapsed", !state.tablesSectionExpanded);
+    }
+    if (elements.parametersSectionToggle) {
+      elements.parametersSectionToggle.classList.toggle("dc-section-toggle-collapsed", !state.parametersSectionExpanded);
+      elements.parametersSectionToggle.title = state.parametersSectionExpanded ? "Свернуть параметры" : "Развернуть параметры";
+    }
+    if (elements.tablesSectionToggle) {
+      elements.tablesSectionToggle.classList.toggle("dc-section-toggle-collapsed", !state.tablesSectionExpanded);
+      elements.tablesSectionToggle.title = state.tablesSectionExpanded ? "Свернуть результаты" : "Развернуть результаты";
+    }
   }
 
   function updateSectionCount(element, count) {
@@ -211,6 +223,7 @@
     elements.parameters = byId("dataconsole-parameters");
     elements.parametersSplitter = byId("dataconsole-parameters-splitter");
     elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
+    elements.parametersSectionToggle = byId("dataconsole-parameters-toggle");
     elements.parametersList = byId("dataconsole-parameters-list");
     elements.editParameter = byId("dataconsole-edit-parameter");
     elements.copyParameter = byId("dataconsole-copy-parameter");
@@ -219,6 +232,7 @@
     elements.addParameter = byId("dataconsole-add-parameter");
     elements.deleteParameter = byId("dataconsole-delete-parameter");
     elements.tablesList = byId("dataconsole-tables-list");
+    elements.tablesSectionToggle = byId("dataconsole-tables-toggle");
     elements.toggleMeasurements = byId("dataconsole-toggle-measurements");
     elements.exportTable = byId("dataconsole-export-table");
     elements.settings = byId("dataconsole-settings");
@@ -2765,11 +2779,41 @@
         applySecondarySectionState();
       });
     }
+    if (elements.parametersSectionToggle) {
+      elements.parametersSectionToggle.setAttribute("role", "button");
+      elements.parametersSectionToggle.tabIndex = 0;
+      elements.parametersSectionToggle.addEventListener("click", function (event) {
+        event.stopPropagation();
+        state.parametersSectionExpanded = !state.parametersSectionExpanded;
+        applySecondarySectionState();
+      });
+      elements.parametersSectionToggle.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+          event.preventDefault();
+          elements.parametersSectionToggle.click();
+        }
+      });
+    }
     if (tablesHeader) {
       tablesHeader.title = "Двойной щелчок: свернуть или развернуть результаты";
       tablesHeader.addEventListener("dblclick", function () {
         state.tablesSectionExpanded = !state.tablesSectionExpanded;
         applySecondarySectionState();
+      });
+    }
+    if (elements.tablesSectionToggle) {
+      elements.tablesSectionToggle.setAttribute("role", "button");
+      elements.tablesSectionToggle.tabIndex = 0;
+      elements.tablesSectionToggle.addEventListener("click", function (event) {
+        event.stopPropagation();
+        state.tablesSectionExpanded = !state.tablesSectionExpanded;
+        applySecondarySectionState();
+      });
+      elements.tablesSectionToggle.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+          event.preventDefault();
+          elements.tablesSectionToggle.click();
+        }
       });
     }
     applySecondarySectionState();
