@@ -80,10 +80,74 @@
     workspaceBusy: false,
     workspaceBusyOperationId: "",
     sidebarWidth: 260,
-    parametersWidth: 280
+    parametersWidth: 280,
+    contextMenu: null
   };
 
   var elements = {};
+
+  function closeContextMenu() {
+    if (state.contextMenu && state.contextMenu.parentNode) {
+      state.contextMenu.parentNode.removeChild(state.contextMenu);
+    }
+    state.contextMenu = null;
+  }
+
+  function openContextMenu(event, items) {
+    closeContextMenu();
+    var menu = document.createElement("div");
+    menu.className = "dc-context-menu";
+    menu.setAttribute("role", "menu");
+    items.forEach(function (item) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "dc-context-menu-item" + (item.disabled ? " dc-context-menu-item-disabled" : "");
+      button.textContent = item.label;
+      button.disabled = Boolean(item.disabled);
+      button.setAttribute("role", "menuitem");
+      button.addEventListener("click", function () {
+        if (!item.disabled) {
+          closeContextMenu();
+          item.action();
+        }
+      });
+      menu.appendChild(button);
+    });
+    document.body.appendChild(menu);
+    var left = event.clientX;
+    var top = event.clientY;
+    var rect = menu.getBoundingClientRect();
+    menu.style.left = Math.max(4, Math.min(left, window.innerWidth - rect.width - 4)) + "px";
+    menu.style.top = Math.max(4, Math.min(top, window.innerHeight - rect.height - 4)) + "px";
+    state.contextMenu = menu;
+    var firstEnabled = menu.querySelector("button:not(:disabled)");
+    if (firstEnabled) {
+      firstEnabled.focus();
+    }
+  }
+
+  function openAlgorithmContextMenu(event, algorithm) {
+    selectAlgorithmInTree(algorithm.id, true);
+    openContextMenu(event, [
+      { label: "Добавить алгоритм рядом", action: function () { addAlgorithmFromUi(false); } },
+      { label: "Добавить вложенный алгоритм", action: function () { addAlgorithmFromUi(true); } },
+      { label: "Переименовать", action: function () { renameAlgorithmFromUi(algorithm); } },
+      { label: "Удалить", action: deleteAlgorithmFromUi },
+      { label: "Свернуть все", action: collapseAll }
+    ]);
+  }
+
+  function openParameterContextMenu(event, algorithm, parameter) {
+    selectParameter(parameter.id);
+    openContextMenu(event, [
+      { label: "Добавить параметр", action: addParameterFromUi },
+      { label: "Заполнить параметры запроса", disabled: !algorithmDocumentByKind(algorithm, "query"), action: fillParametersFromUi },
+      { label: "Изменить значение", action: function () { editSelectedParameterFromUi("edit"); } },
+      { label: "Копировать параметр", action: copySelectedParameterFromUi },
+      { label: "Очистить значение", action: function () { editSelectedParameterFromUi("clear"); } },
+      { label: "Удалить параметр", action: deleteParameterFromUi }
+    ]);
+  }
 
   function byId(id) {
     return document.getElementById(id);
@@ -1028,6 +1092,11 @@
       row.addEventListener("click", function () {
         selectParameter(parameter.id);
       });
+      row.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openParameterContextMenu(event, algorithm, parameter);
+      });
       row.addEventListener("dblclick", function () {
         selectParameter(parameter.id);
         requestParameterEdit("edit", algorithm.id, parameter.id);
@@ -1662,6 +1731,11 @@
         activateAlgorithmFromUi(algorithm);
         heading.focus();
       }
+    });
+    heading.addEventListener("contextmenu", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openAlgorithmContextMenu(event, algorithm);
     });
     heading.addEventListener("keydown", function (event) {
       if (event.key === "F2" || event.keyCode === 113) {
@@ -2646,6 +2720,16 @@
       if (event.key === "Escape" || event.keyCode === 27) {
         closeWorkbenchDialog();
         event.preventDefault();
+      }
+    });
+    document.addEventListener("click", function (event) {
+      if (state.contextMenu && !state.contextMenu.contains(event.target)) {
+        closeContextMenu();
+      }
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" || event.keyCode === 27) {
+        closeContextMenu();
       }
     });
   }

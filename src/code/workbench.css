@@ -1071,6 +1071,33 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 .dc-parameter-value-icon-other { background-image: url("tree/icons/keyvalue.png"); }
 .dc-parameter-value-icon-clear { object-fit: contain; }
 
+.dc-context-menu {
+  position: fixed;
+  z-index: 50;
+  min-width: 210px;
+  padding: 4px;
+  border: 1px solid var(--dc-border);
+  border-radius: 4px;
+  background: var(--dc-chrome-raised);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+}
+.dc-context-menu-item {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 3px;
+  color: var(--dc-text);
+  background: transparent;
+  font: 11px/18px "Segoe UI", Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.dc-context-menu-item:hover:not(:disabled),
+.dc-context-menu-item:focus:not(:disabled) { outline: none; background: var(--dc-hover); }
+.dc-context-menu-item:disabled { color: var(--dc-muted); cursor: default; opacity: .55; }
+
 .dc-tables-header {
   display: flex;
   flex: 0 0 36px;
