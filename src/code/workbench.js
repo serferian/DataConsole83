@@ -88,6 +88,37 @@
 
   var elements = {};
 
+  var layoutStateStorageKey = "dataconsole83.layout.v1";
+
+  function saveLayoutState() {
+    try {
+      window.localStorage.setItem(layoutStateStorageKey, JSON.stringify({
+        sidebarVisible: state.sidebarVisible,
+        parametersVisible: state.parametersVisible,
+        parametersSectionExpanded: state.parametersSectionExpanded,
+        tablesSectionExpanded: state.tablesSectionExpanded
+      }));
+    } catch (error) {
+      // Storage can be unavailable in an embedded HTML document.
+    }
+  }
+
+  function restoreLayoutState() {
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(layoutStateStorageKey) || "null");
+      if (!saved || typeof saved !== "object") {
+        return;
+      }
+      ["sidebarVisible", "parametersVisible", "parametersSectionExpanded", "tablesSectionExpanded"].forEach(function (property) {
+        if (typeof saved[property] === "boolean") {
+          state[property] = saved[property];
+        }
+      });
+    } catch (error) {
+      // Ignore malformed or unavailable persisted layout state.
+    }
+  }
+
   function applySecondarySectionState() {
     var parametersSection = elements.parameters ? elements.parameters.querySelector(".dc-parameters-section") : null;
     var tablesSection = elements.parameters ? elements.parameters.querySelector(".dc-tables-section") : null;
@@ -109,6 +140,7 @@
       elements.tablesSectionToggle.classList.toggle("dc-section-toggle-collapsed", !state.tablesSectionExpanded);
       elements.tablesSectionToggle.title = state.tablesSectionExpanded ? "Свернуть результаты" : "Развернуть результаты";
     }
+    saveLayoutState();
   }
 
   function updateSectionCount(element, count) {
@@ -2633,6 +2665,7 @@
       }
       var restoringSidebar = visible && !state.sidebarVisible;
       state.sidebarVisible = visible;
+      saveLayoutState();
       elements.workbench.classList.toggle("dc-sidebar-hidden", !visible);
       elements.togglePrimarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
       if (restoringSidebar) {
@@ -2668,6 +2701,7 @@
         throw new Error("setParametersVisible ожидает Булево.");
       }
       state.parametersVisible = visible;
+      saveLayoutState();
       elements.workbench.classList.toggle("dc-secondary-sidebar-hidden", !visible);
       elements.toggleSecondarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
       window.setTimeout(function () {
@@ -3253,6 +3287,7 @@
 
   function initialize() {
     cacheElements();
+    restoreLayoutState();
     initializeWorkspaceFileControls();
     byId("dataconsole-collapse-all").addEventListener("click", collapseAll);
     elements.fillParameters.addEventListener("click", fillParametersFromUi);
