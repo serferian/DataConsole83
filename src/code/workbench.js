@@ -596,6 +596,10 @@
         sessionId: snapshot.sessionId === undefined ? "" : String(snapshot.sessionId),
         fileName: snapshot.fileName === undefined ? "" : String(snapshot.fileName),
         modified: Boolean(snapshot.modified),
+        revision: Number(snapshot.revision) >= 0 ? Math.floor(Number(snapshot.revision)) : 0,
+        fileHash: snapshot.fileHash === undefined || snapshot.fileHash === null
+          ? ""
+          : String(snapshot.fileHash),
         canExecute: snapshot.canExecute === undefined ? true : Boolean(snapshot.canExecute),
         selectedAlgorithmId: snapshot.selectedAlgorithmId === undefined || snapshot.selectedAlgorithmId === null
           ? ""
@@ -916,8 +920,11 @@
       algorithmId: documentItem.algorithmId,
       documentId: documentItem.id,
       documentKind: documentItem.kind,
-      action: action
+      action: action,
+      // Выполнение использует HTML-модель, даже если скрытое дерево 1С устарело.
+      documentText: getDocumentText(documentItem.id)
     };
+    payload.workspaceRevision = state.workspace ? state.workspace.revision : 0;
     Object.keys(additional || {}).forEach(function (key) {
       payload[key] = additional[key];
     });
@@ -2655,6 +2662,58 @@
     }
   }
 
+  function getWorkspaceSnapshot() {
+    try {
+      if (!state.workspace) {
+        throw new Error("Рабочая область еще не загружена.");
+      }
+
+      function serializeAlgorithm(algorithm) {
+        return {
+          id: algorithm.id,
+          name: algorithm.name,
+          documents: algorithm.documents.map(function (documentItem) {
+            var text = getDocumentText(documentItem.id);
+            return {
+              id: documentItem.id,
+              kind: documentItem.kind,
+              title: documentItem.title,
+              text: text,
+              hasContent: typeof text === "string" && text.length > 0
+            };
+          }),
+          parameters: algorithm.parameters.map(function (parameter) {
+            return {
+              id: parameter.id,
+              name: parameter.name,
+              typeName: parameter.typeName,
+              presentation: parameter.presentation,
+              editableInline: Boolean(parameter.editableInline)
+            };
+          }),
+          children: algorithm.children.map(serializeAlgorithm)
+        };
+      }
+
+      return JSON.stringify({
+        formatVersion: 5,
+        sessionId: state.workspace.sessionId,
+        fileName: state.workspace.fileName,
+        modified: Boolean(state.workspace.modified),
+        revision: state.workspace.revision,
+        fileHash: state.workspace.fileHash,
+        selectedAlgorithmId: state.workspace.selectedAlgorithmId || state.selectedAlgorithmId || "",
+        selectedTableId: state.selectedTableId || "",
+        measurementsEnabled: Boolean(state.workspace.measurementsEnabled),
+        tables: state.workspace.tables,
+        settings: state.workspace.settings,
+        algorithms: state.workspace.algorithms.map(serializeAlgorithm)
+      });
+    } catch (error) {
+      return reportError("getWorkspaceSnapshot", error);
+    }
+  }
+
   function setSidebarVisible(visible) {
     try {
       if (typeof visible !== "boolean") {
@@ -3255,6 +3314,7 @@
     item.text = model.getValue();
     item.hasContent = item.text.length > 0;
     state.workspace.modified = true;
+    state.workspace.revision += 1;
     rebuildDocumentSearchIndex(item);
     updateDocumentButtonState(item.id);
     renderFileState();
@@ -3317,6 +3377,7 @@
     activateDocument: activateDocument,
     getActiveDocument: getActiveDocument,
     getDocumentText: getDocumentText,
+    getWorkspaceSnapshot: getWorkspaceSnapshot,
     requestQueryConstructor: requestQueryConstructor,
     setSidebarVisible: setSidebarVisible,
     setParametersVisible: setParametersVisible,
