@@ -1116,7 +1116,7 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
 }
 .dc-context-menu-item {
-  display: block;
+  display: flex;
   width: 100%;
   min-height: 28px;
   padding: 5px 9px;
@@ -1128,6 +1128,8 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   text-align: left;
   cursor: pointer;
 }
+.dc-context-menu-icon { width: 16px; height: 16px; margin-right: 8px; object-fit: contain; opacity: .82; }
+.dc-context-menu-label { min-width: 0; }
 .dc-context-menu-item:hover:not(:disabled),
 .dc-context-menu-item:focus:not(:disabled) { outline: none; background: var(--dc-hover); }
 .dc-context-menu-item:disabled { color: var(--dc-muted); cursor: default; opacity: .55; }

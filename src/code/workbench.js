@@ -133,7 +133,15 @@
       var button = document.createElement("button");
       button.type = "button";
       button.className = "dc-context-menu-item" + (item.disabled ? " dc-context-menu-item-disabled" : "");
-      button.textContent = item.label;
+      if (item.icon) {
+        var icon = document.createElement("img");
+        icon.className = "dc-context-menu-icon";
+        icon.src = "tree/icons/actions/" + item.icon + ".svg";
+        icon.alt = "";
+        icon.setAttribute("aria-hidden", "true");
+        button.appendChild(icon);
+      }
+      appendTextElement(button, "span", "dc-context-menu-label", item.label);
       button.disabled = Boolean(item.disabled);
       button.setAttribute("role", "menuitem");
       button.addEventListener("click", function () {
@@ -171,12 +179,11 @@
   function openParameterContextMenu(event, algorithm, parameter) {
     selectParameter(parameter.id);
     openContextMenu(event, [
-      { label: "Добавить параметр", action: addParameterFromUi },
-      { label: "Заполнить параметры запроса", disabled: !algorithmDocumentByKind(algorithm, "query"), action: fillParametersFromUi },
-      { label: "Изменить значение", action: function () { editSelectedParameterFromUi("edit"); } },
-      { label: "Копировать параметр", action: copySelectedParameterFromUi },
-      { label: "Очистить значение", action: function () { editSelectedParameterFromUi("clear"); } },
-      { label: "Удалить параметр", action: deleteParameterFromUi }
+      { label: "Заполнить параметры запроса", icon: "playlist_add_check", disabled: !algorithmDocumentByKind(algorithm, "query"), action: fillParametersFromUi },
+      { label: "Добавить параметр", icon: "add", action: addParameterFromUi },
+      { label: "Копировать параметр", icon: "content_copy", action: copySelectedParameterFromUi },
+      { label: "Изменить значение", icon: "edit", action: function () { editSelectedParameterFromUi("edit"); } },
+      { label: "Удалить параметр", icon: "delete", action: deleteParameterFromUi }
     ]);
   }
 
