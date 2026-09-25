@@ -9,6 +9,7 @@
     background: { className: "background", glyph: "F", title: "Фоновый код", tabTitle: "Фон", language: "bsl", order: 4 }
   };
   var DOCUMENT_KIND_ORDER = ["query", "before-query", "client", "server", "background"];
+  var WORKSPACE_FORMAT_VERSION = 5;
   var DOCUMENT_COMMANDS = {
     query: [
       { action: "execute-query", label: "Выполнить", primary: true },
@@ -574,6 +575,16 @@
       throw new Error("Рабочая область должна быть объектом.");
     }
 
+    if (snapshot.formatVersion !== WORKSPACE_FORMAT_VERSION) {
+      throw new Error("Неподдерживаемая версия WorkspaceStore: "
+        + String(snapshot.formatVersion) + ". Ожидается " + WORKSPACE_FORMAT_VERSION + ".");
+    }
+
+    var revision = Number(snapshot.revision);
+    if (!isFinite(revision) || revision < 0) {
+      revision = 0;
+    }
+
     var roots = asArray(snapshot.algorithms, "workspace.algorithms");
     var normalizedRoots = [];
     var rawTables = asArray(snapshot.tables, "workspace.tables");
@@ -593,10 +604,11 @@
 
     return {
       workspace: {
+        formatVersion: WORKSPACE_FORMAT_VERSION,
         sessionId: snapshot.sessionId === undefined ? "" : String(snapshot.sessionId),
         fileName: snapshot.fileName === undefined ? "" : String(snapshot.fileName),
         modified: Boolean(snapshot.modified),
-        revision: Number(snapshot.revision) >= 0 ? Math.floor(Number(snapshot.revision)) : 0,
+        revision: Math.floor(revision),
         fileHash: snapshot.fileHash === undefined || snapshot.fileHash === null
           ? ""
           : String(snapshot.fileHash),
@@ -2696,7 +2708,7 @@
       }
 
       return JSON.stringify({
-        formatVersion: 5,
+        formatVersion: WORKSPACE_FORMAT_VERSION,
         sessionId: state.workspace.sessionId,
         fileName: state.workspace.fileName,
         modified: Boolean(state.workspace.modified),

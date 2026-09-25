@@ -26,6 +26,7 @@
 | `src/code/index.html` | Единая HTML-оболочка Monaco, проводник алгоритмов и дерево переменных |
 | `src/code/editor.js` | Жизненный цикл Monaco, действия, модели, diff, маркеры и события |
 | `src/code/workbench.js`, `workbench.css` | Проводник алгоритмов, отдельные Monaco-модели документов и контракт `DataConsoleApp` |
+| `docs/workspace-store-v5.md` | JSON-контракт HTML-хранилища алгоритмов версии 5 |
 | `src/code/bsl_language.js`, `bsl_helper.js` | Регистрация языка BSL и интеграционная логика редактора |
 | `src/code/bslQuery.js`, `bslDCS.js` | Поддержка языка запросов и СКД |
 | `src/code/bslGlobals.js`, `bslMetadata.js` | Большие сгенерированные/справочные данные подсказок |

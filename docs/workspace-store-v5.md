@@ -1,0 +1,64 @@
+# WorkspaceStore v5
+
+`WorkspaceStore` — единственный снимок состояния HTML-редактора. Нативное дерево формы 1С не является источником истины для текстов, структуры алгоритмов или порядка документов.
+
+## Формат файла
+
+Файл `*.a1c` версии 5 содержит JSON UTF-8 со следующей корневой структурой:
+
+```json
+{
+  "formatVersion": 5,
+  "sessionId": "string",
+  "fileName": "string",
+  "modified": false,
+  "revision": 0,
+  "fileHash": "string",
+  "selectedAlgorithmId": "string",
+  "selectedTableId": "string",
+  "measurementsEnabled": false,
+  "tables": [],
+  "settings": {},
+  "algorithms": []
+}
+```
+
+`formatVersion` обязателен и равен `5`. `revision` — неотрицательное целое число, увеличиваемое HTML-редактором при изменении состояния. `fileHash` — непрозрачная строка хеша последней принятой версии файла; пустая строка означает, что хеш еще не рассчитан.
+
+## Алгоритмы и документы
+
+Каждый элемент `algorithms` содержит:
+
+```json
+{
+  "id": "algorithm-id",
+  "name": "Алгоритм",
+  "documents": [
+    {
+      "id": "algorithm-id:query",
+      "kind": "query",
+      "title": "Запрос",
+      "text": "ВЫБРАТЬ ...",
+      "hasContent": true
+    }
+  ],
+  "parameters": [
+    {
+      "id": "parameter-id",
+      "name": "Дата",
+      "typeName": "Дата",
+      "presentation": "",
+      "editableInline": true
+    }
+  ],
+  "children": []
+}
+```
+
+Допустимые `documents[].kind`: `query`, `before-query`, `client`, `server`, `background`. Идентификаторы алгоритмов и документов обязательны и уникальны в пределах снимка. Текст документа хранится только в `documents[].text`; 1С получает его из HTML payload при выполнении.
+
+Описание параметра хранится в снимке для отображения и ID-based команд редактора. Типизированное runtime-значение параметра остается в таблице значений формы 1С и не смешивается с текстовым состоянием HTML.
+
+## Обратная совместимость
+
+Чтение старого XML `.a1c` остается отдельной веткой мигратора. После чтения XML форма строит снимок версии 5 и загружает его в HTML. Новая запись всегда использует контракт `WorkspaceStore v5`.
