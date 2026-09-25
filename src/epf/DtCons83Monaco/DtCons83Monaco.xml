@@ -23,7 +23,7 @@
 					<v8:content>Data Console 8.3 (Monaco)</v8:content>
 				</v8:item>
 			</Synonym>
-			<Comment>5.0.1</Comment>
+			<Comment>5.0.2</Comment>
 			<DefaultForm>ExternalDataProcessor.DtCons83Monaco.Form.Основная</DefaultForm>
 			<AuxiliaryForm/>
 		</Properties>
