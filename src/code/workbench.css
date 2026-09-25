@@ -124,10 +124,21 @@ html.dc-theme-dark {
 .dc-explorer-actions {
   display: flex;
   flex: 1 1 100%;
+  align-items: center;
   justify-content: flex-end;
   gap: 2px;
   margin-top: 4px;
 }
+.dc-tree-search-control {
+  flex: 1 1 auto;
+  min-width: 70px;
+  height: 26px;
+  margin-right: 2px;
+}
+.dc-tree-search-control .dc-search-input { height: 24px; padding-top: 2px; padding-bottom: 2px; }
+.dc-tree-search-control::before { top: 6px; }
+.dc-tree-search-control::after { top: 15px; }
+.dc-tree-search-control .dc-search-clear { top: 1px; }
 
 .dc-file-actions {
   display: flex;

@@ -168,11 +168,11 @@
   function openAlgorithmContextMenu(event, algorithm) {
     selectAlgorithmInTree(algorithm.id, true);
     openContextMenu(event, [
-      { label: "Добавить алгоритм рядом", action: function () { addAlgorithmFromUi(false); } },
-      { label: "Добавить вложенный алгоритм", action: function () { addAlgorithmFromUi(true); } },
-      { label: "Переименовать", action: function () { renameAlgorithmFromUi(algorithm); } },
-      { label: "Удалить", action: deleteAlgorithmFromUi },
-      { label: "Свернуть все", action: collapseAll }
+      { label: "Добавить алгоритм рядом", icon: "add", action: function () { addAlgorithmFromUi(false); } },
+      { label: "Добавить вложенный алгоритм", icon: "subdirectory_arrow_right", action: function () { addAlgorithmFromUi(true); } },
+      { label: "Переименовать", icon: "edit", action: function () { renameAlgorithmFromUi(algorithm); } },
+      { label: "Удалить", icon: "delete", action: deleteAlgorithmFromUi },
+      { label: "Свернуть все", icon: "unfold_less", action: collapseAll }
     ]);
   }
 
