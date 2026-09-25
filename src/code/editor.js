@@ -3121,24 +3121,31 @@ define(['bslGlobals', 'bslMetadata', 'snippets', 'bsl_language', 'vs/editor/edit
 
   function showVariablesDisplay() {
 
-    document.getElementById("container").style.height = "70%";
-    getActiveEditor().layout();
     document.getElementById("display-title").innerHTML = engLang ? "Variables" : "Просмотр значений переменных:"
     let element = document.getElementById("display");
     element.style.height = "30%";
     element.style.display = "block";
+    document.getElementById("container").style.height = "70%";
+    window.setTimeout(function () {
+      if (getActiveEditor())
+        getActiveEditor().layout();
+    }, 0);
 
   }
 
   function hideVariablesDisplay() {
 
-    document.getElementById("container").style.height = "100%";
-    getActiveEditor().layout();
     let element = document.getElementById("display");
     element.style.height = "0";
     element.style.display = "none";
-    treeview.dispose();
+    document.getElementById("container").style.height = "100%";
+    if (treeview)
+      treeview.dispose();
     treeview = null;
+    window.setTimeout(function () {
+      if (getActiveEditor())
+        getActiveEditor().layout();
+    }, 0);
 
   }
 
