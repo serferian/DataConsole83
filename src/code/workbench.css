@@ -1023,6 +1023,10 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   background: var(--dc-chrome-raised);
   box-sizing: border-box;
 }
+.dc-section-count { color: var(--dc-muted); font-weight: 600; letter-spacing: 0; }
+.dc-secondary-section.dc-section-collapsed > :not(.dc-parameters-header):not(.dc-tables-header) { display: none; }
+.dc-secondary-section.dc-section-collapsed > .dc-parameters-header,
+.dc-secondary-section.dc-section-collapsed > .dc-tables-header { border-bottom: 0; }
 
 .dc-parameters-heading { flex: 1 1 auto; min-width: 0; }
 .dc-parameters-title { font-size: 10px; font-weight: 700; line-height: 15px; letter-spacing: .07em; }

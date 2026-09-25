@@ -72,6 +72,8 @@
     sidebarVisible: true,
     sidebarScrollTop: 0,
     parametersVisible: true,
+    parametersSectionExpanded: true,
+    tablesSectionExpanded: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
     workspaceInitialized: false,
@@ -85,6 +87,23 @@
   };
 
   var elements = {};
+
+  function applySecondarySectionState() {
+    var parametersSection = elements.parameters ? elements.parameters.querySelector(".dc-parameters-section") : null;
+    var tablesSection = elements.parameters ? elements.parameters.querySelector(".dc-tables-section") : null;
+    if (parametersSection) {
+      parametersSection.classList.toggle("dc-section-collapsed", !state.parametersSectionExpanded);
+    }
+    if (tablesSection) {
+      tablesSection.classList.toggle("dc-section-collapsed", !state.tablesSectionExpanded);
+    }
+  }
+
+  function updateSectionCount(element, count) {
+    if (element) {
+      element.textContent = " (" + count + ")";
+    }
+  }
 
   function closeContextMenu() {
     if (state.contextMenu && state.contextMenu.parentNode) {
@@ -1019,6 +1038,7 @@
     }
 
     elements.parametersAlgorithm.textContent = algorithm.name;
+    updateSectionCount(byId("dataconsole-parameters-count"), algorithm.parameters.length);
     elements.parametersAlgorithm.title = algorithm.name;
     var kind = activeDocument ? normalizedKind(activeDocument.kind) : "";
     var canFill = kind === "query" || kind === "beforequery";
@@ -1215,6 +1235,7 @@
       elements.tablesList.removeChild(elements.tablesList.firstChild);
     }
     var tables = state.workspace ? state.workspace.tables : [];
+    updateSectionCount(byId("dataconsole-tables-count"), tables.length);
     var canExecute = Boolean(state.workspace && state.workspace.canExecute);
     var selectedExists = tables.some(function (table) { return table.id === state.selectedTableId; });
     if (!selectedExists) {
@@ -2734,6 +2755,26 @@
     });
   }
 
+  function initializeSecondarySectionControls() {
+    var parametersHeader = document.querySelector(".dc-parameters-header");
+    var tablesHeader = document.querySelector(".dc-tables-header");
+    if (parametersHeader) {
+      parametersHeader.title = "Двойной щелчок: свернуть или развернуть параметры";
+      parametersHeader.addEventListener("dblclick", function () {
+        state.parametersSectionExpanded = !state.parametersSectionExpanded;
+        applySecondarySectionState();
+      });
+    }
+    if (tablesHeader) {
+      tablesHeader.title = "Двойной щелчок: свернуть или развернуть результаты";
+      tablesHeader.addEventListener("dblclick", function () {
+        state.tablesSectionExpanded = !state.tablesSectionExpanded;
+        applySecondarySectionState();
+      });
+    }
+    applySecondarySectionState();
+  }
+
   function initializeLayoutControls() {
     elements.togglePrimarySidebar.addEventListener("click", function () {
       setSidebarVisible(!state.sidebarVisible);
@@ -3166,6 +3207,7 @@
     elements.fillParameters.addEventListener("click", fillParametersFromUi);
     initializeSearch();
     initializeMutationControls();
+    initializeSecondarySectionControls();
     initializeLayoutControls();
     initializeTableControls();
     initializeSettingsControls();
