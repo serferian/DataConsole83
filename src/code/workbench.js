@@ -62,21 +62,162 @@
     globalSaveHandlerInstalled: false,
     dialogConfirm: null,
     dialogRestoreFocus: null,
+    dialogPending: false,
+    dialogWaitForWorkspaceUpdate: false,
+    dialogConfirmLabel: "",
+    dialogPendingLabel: "",
+    dialogPendingMessage: "",
     searchQuery: "",
     searchTimer: null,
     sidebarVisible: true,
     sidebarScrollTop: 0,
     parametersVisible: true,
+    parametersSectionExpanded: true,
+    tablesSectionExpanded: true,
     settingsVisible: false,
     parameterHint: { documentId: "", visible: false, items: [] },
     workspaceInitialized: false,
+    initializationRetryTimer: null,
+    initializationRetryVisible: false,
     workspaceBusy: false,
     workspaceBusyOperationId: "",
     sidebarWidth: 260,
-    parametersWidth: 280
+    parametersWidth: 280,
+    contextMenu: null
   };
 
   var elements = {};
+
+  var layoutStateStorageKey = "dataconsole83.layout.v1";
+
+  function saveLayoutState() {
+    try {
+      window.localStorage.setItem(layoutStateStorageKey, JSON.stringify({
+        sidebarVisible: state.sidebarVisible,
+        parametersVisible: state.parametersVisible,
+        parametersSectionExpanded: state.parametersSectionExpanded,
+        tablesSectionExpanded: state.tablesSectionExpanded
+      }));
+    } catch (error) {
+      // Storage can be unavailable in an embedded HTML document.
+    }
+  }
+
+  function restoreLayoutState() {
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(layoutStateStorageKey) || "null");
+      if (!saved || typeof saved !== "object") {
+        return;
+      }
+      ["sidebarVisible", "parametersVisible", "parametersSectionExpanded", "tablesSectionExpanded"].forEach(function (property) {
+        if (typeof saved[property] === "boolean") {
+          state[property] = saved[property];
+        }
+      });
+    } catch (error) {
+      // Ignore malformed or unavailable persisted layout state.
+    }
+  }
+
+  function applySecondarySectionState() {
+    var parametersSection = elements.parameters ? elements.parameters.querySelector(".dc-parameters-section") : null;
+    var tablesSection = elements.parameters ? elements.parameters.querySelector(".dc-tables-section") : null;
+    if (parametersSection) {
+      parametersSection.classList.toggle("dc-section-collapsed", !state.parametersSectionExpanded);
+    }
+    if (tablesSection) {
+      tablesSection.classList.toggle("dc-section-collapsed", !state.tablesSectionExpanded);
+    }
+    if (elements.parameters) {
+      elements.parameters.classList.toggle("dc-parameters-collapsed", !state.parametersSectionExpanded);
+      elements.parameters.classList.toggle("dc-tables-collapsed", !state.tablesSectionExpanded);
+    }
+    if (elements.parametersSectionToggle) {
+      elements.parametersSectionToggle.classList.toggle("dc-section-toggle-collapsed", !state.parametersSectionExpanded);
+      elements.parametersSectionToggle.title = state.parametersSectionExpanded ? "Свернуть параметры" : "Развернуть параметры";
+    }
+    if (elements.tablesSectionToggle) {
+      elements.tablesSectionToggle.classList.toggle("dc-section-toggle-collapsed", !state.tablesSectionExpanded);
+      elements.tablesSectionToggle.title = state.tablesSectionExpanded ? "Свернуть результаты" : "Развернуть результаты";
+    }
+    saveLayoutState();
+  }
+
+  function updateSectionCount(element, count) {
+    if (element) {
+      element.textContent = " (" + count + ")";
+    }
+  }
+
+  function closeContextMenu() {
+    if (state.contextMenu && state.contextMenu.parentNode) {
+      state.contextMenu.parentNode.removeChild(state.contextMenu);
+    }
+    state.contextMenu = null;
+  }
+
+  function openContextMenu(event, items) {
+    closeContextMenu();
+    var menu = document.createElement("div");
+    menu.className = "dc-context-menu";
+    menu.setAttribute("role", "menu");
+    items.forEach(function (item) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "dc-context-menu-item" + (item.disabled ? " dc-context-menu-item-disabled" : "");
+      if (item.icon) {
+        var icon = document.createElement("img");
+        icon.className = "dc-context-menu-icon";
+        icon.src = "tree/icons/actions/" + item.icon + ".svg";
+        icon.alt = "";
+        icon.setAttribute("aria-hidden", "true");
+        button.appendChild(icon);
+      }
+      appendTextElement(button, "span", "dc-context-menu-label", item.label);
+      button.disabled = Boolean(item.disabled);
+      button.setAttribute("role", "menuitem");
+      button.addEventListener("click", function () {
+        if (!item.disabled) {
+          closeContextMenu();
+          item.action();
+        }
+      });
+      menu.appendChild(button);
+    });
+    document.body.appendChild(menu);
+    var left = event.clientX;
+    var top = event.clientY;
+    var rect = menu.getBoundingClientRect();
+    menu.style.left = Math.max(4, Math.min(left, window.innerWidth - rect.width - 4)) + "px";
+    menu.style.top = Math.max(4, Math.min(top, window.innerHeight - rect.height - 4)) + "px";
+    state.contextMenu = menu;
+    var firstEnabled = menu.querySelector("button:not(:disabled)");
+    if (firstEnabled) {
+      firstEnabled.focus();
+    }
+  }
+
+  function openAlgorithmContextMenu(event, algorithm) {
+    selectAlgorithmInTree(algorithm.id, true);
+    openContextMenu(event, [
+      { label: "Добавить алгоритм рядом", icon: "add", action: function () { addAlgorithmFromUi(false); } },
+      { label: "Добавить вложенный алгоритм", icon: "subdirectory_arrow_right", action: function () { addAlgorithmFromUi(true); } },
+      { label: "Переименовать", icon: "edit", action: function () { renameAlgorithmFromUi(algorithm); } },
+      { label: "Удалить", icon: "delete", action: deleteAlgorithmFromUi },
+      { label: "Свернуть все", icon: "unfold_less", action: collapseAll }
+    ]);
+  }
+
+  function openParameterContextMenu(event, algorithm, parameter) {
+    selectParameter(parameter.id);
+    openContextMenu(event, [
+      { label: "Заполнить параметры запроса", icon: "playlist_add_check", disabled: !algorithmDocumentByKind(algorithm, "query"), action: fillParametersFromUi },
+      { label: "Добавить параметр", icon: "add", action: addParameterFromUi },
+      { label: "Копировать параметр", icon: "content_copy", action: copySelectedParameterFromUi },
+      { label: "Изменить значение", icon: "edit", action: function () { editSelectedParameterFromUi("edit"); } },
+      { label: "Удалить параметр", icon: "delete", action: deleteParameterFromUi }
+    ]);
+  }
 
   function byId(id) {
     return document.getElementById(id);
@@ -100,6 +241,7 @@
     elements.searchEmpty = byId("dataconsole-search-empty");
     elements.explorerEmpty = byId("dataconsole-explorer-empty");
     elements.emptyInitializing = byId("dataconsole-empty-initializing");
+    elements.emptyRetry = byId("dataconsole-empty-retry");
     elements.emptyOpen = byId("dataconsole-empty-open");
     elements.editorEmpty = byId("dataconsole-editor-empty");
     elements.editorShell = byId("dataconsole-editor-shell");
@@ -120,6 +262,7 @@
     elements.parameters = byId("dataconsole-parameters");
     elements.parametersSplitter = byId("dataconsole-parameters-splitter");
     elements.parametersAlgorithm = byId("dataconsole-parameters-algorithm");
+    elements.parametersSectionToggle = byId("dataconsole-parameters-toggle");
     elements.parametersList = byId("dataconsole-parameters-list");
     elements.editParameter = byId("dataconsole-edit-parameter");
     elements.copyParameter = byId("dataconsole-copy-parameter");
@@ -128,6 +271,7 @@
     elements.addParameter = byId("dataconsole-add-parameter");
     elements.deleteParameter = byId("dataconsole-delete-parameter");
     elements.tablesList = byId("dataconsole-tables-list");
+    elements.tablesSectionToggle = byId("dataconsole-tables-toggle");
     elements.toggleMeasurements = byId("dataconsole-toggle-measurements");
     elements.exportTable = byId("dataconsole-export-table");
     elements.settings = byId("dataconsole-settings");
@@ -470,6 +614,106 @@
     };
   }
 
+  function setAlgorithmDepth(algorithm, parentId, depth) {
+    algorithm.parentId = parentId;
+    algorithm.depth = depth;
+    algorithm.children.forEach(function (child) {
+      setAlgorithmDepth(child, algorithm.id, depth + 1);
+    });
+  }
+
+  function collectAlgorithmTree(algorithm, algorithms, documents) {
+    algorithms.push(algorithm);
+    algorithm.documents.forEach(function (documentItem) {
+      documents.push(documentItem);
+    });
+    algorithm.children.forEach(function (child) {
+      collectAlgorithmTree(child, algorithms, documents);
+    });
+  }
+
+  function registerAlgorithmTree(algorithm) {
+    state.algorithms.set(algorithm.id, algorithm);
+    algorithm.documents.forEach(function (documentItem) {
+      state.documents.set(documentItem.id, documentItem);
+    });
+    algorithm.children.forEach(registerAlgorithmTree);
+  }
+
+  function ensureAlgorithmChildrenContainer(rendered) {
+    var children = rendered.body.querySelector(".dc-children");
+    if (!children) {
+      children = document.createElement("div");
+      children.className = "dc-children";
+      children.setAttribute("role", "group");
+      rendered.body.appendChild(children);
+    }
+    rendered.twistie.classList.remove("dc-twistie-empty");
+    rendered.twistie.tabIndex = 0;
+    return children;
+  }
+
+  function updateRenderedAlgorithmChildrenState(algorithmId) {
+    var algorithm = state.algorithms.get(algorithmId);
+    var rendered = state.algorithmNodes.get(algorithmId);
+    if (!algorithm || !rendered) {
+      return;
+    }
+    var hasChildren = algorithm.children.length > 0;
+    if (!hasChildren) {
+      var children = rendered.body.querySelector(".dc-children");
+      if (children) {
+        rendered.body.removeChild(children);
+      }
+      rendered.twistie.classList.add("dc-twistie-empty");
+      rendered.twistie.tabIndex = -1;
+      rendered.twistie.setAttribute("aria-expanded", "false");
+      rendered.twistie.setAttribute("aria-label", "Развернуть " + algorithm.name);
+    } else {
+      rendered.twistie.classList.remove("dc-twistie-empty");
+      rendered.twistie.tabIndex = 0;
+    }
+  }
+
+  function clearActiveDocument() {
+    saveActiveViewState();
+    if (state.editor && state.legacyModel && !state.legacyModel.isDisposed()) {
+      state.editor.setModel(state.legacyModel);
+    }
+    state.activeDocumentId = null;
+    state.pendingDocumentId = null;
+    if (elements.editorEmpty) {
+      elements.editorEmpty.hidden = false;
+    }
+    updateModeBar();
+    if (state.editor) {
+      state.editor.layout();
+    }
+  }
+
+  function completePendingWorkspaceMutation() {
+    if (!state.dialogPending) {
+      return;
+    }
+    state.dialogRestoreFocus = null;
+    closeWorkbenchDialog(true);
+  }
+
+  function failPendingWorkspaceMutation(description) {
+    if (!state.dialogPending) {
+      return;
+    }
+    state.dialogPending = false;
+    elements.dialogBackdrop.removeAttribute("aria-busy");
+    elements.dialogInput.disabled = false;
+    elements.dialogCancel.disabled = false;
+    elements.dialogConfirm.disabled = false;
+    elements.dialogConfirm.textContent = state.dialogConfirmLabel || "Продолжить";
+    elements.dialogError.textContent = description || "Не удалось выполнить операцию.";
+    elements.dialogError.hidden = false;
+    elements.dialogConfirm.focus();
+  }
+
   function appendTextElement(parent, tagName, className, text) {
     var element = document.createElement(tagName);
     element.className = className;
@@ -585,6 +829,24 @@
       state.searchExpandedAlgorithms.set(current.id, true);
       current = current.parentId ? state.algorithms.get(current.parentId) : null;
     }
+  }
+
+  function restoreSelectedAlgorithmPosition(algorithmId) {
+    var normalizedAlgorithmId = String(algorithmId);
+    window.setTimeout(function () {
+      if (state.selectedAlgorithmId !== normalizedAlgorithmId || !elements.tree) {
+        return;
+      }
+      var rendered = state.algorithmNodes.get(normalizedAlgorithmId);
+      if (!rendered || !rendered.heading) {
+        return;
+      }
+      var treeRect = elements.tree.getBoundingClientRect();
+      var headingRect = rendered.heading.getBoundingClientRect();
+      var centeredOffset = Math.max(0, (elements.tree.clientHeight - headingRect.height) / 2);
+      elements.tree.scrollTop += headingRect.top - treeRect.top - centeredOffset;
+      state.sidebarScrollTop = elements.tree.scrollTop;
+    }, 0);
   }
 
   function updateRenderedAlgorithmStates() {
@@ -829,6 +1091,7 @@
     }
 
     elements.parametersAlgorithm.textContent = algorithm.name;
+    updateSectionCount(byId("dataconsole-parameters-count"), algorithm.parameters.length);
     elements.parametersAlgorithm.title = algorithm.name;
     var kind = activeDocument ? normalizedKind(activeDocument.kind) : "";
     var canFill = kind === "query" || kind === "beforequery";
@@ -876,12 +1139,14 @@
         button.title = descriptor.title;
         button.setAttribute("aria-label", descriptor.title);
         button.disabled = !state.workspace.canExecute;
-        if (descriptor.icon !== "clear") {
-          var icon = document.createElement("span");
-          icon.className = "dc-parameter-value-icon dc-parameter-value-icon-" + descriptor.icon;
-          icon.setAttribute("aria-hidden", "true");
-          button.appendChild(icon);
+        var icon = document.createElement(descriptor.icon === "clear" ? "img" : "span");
+        icon.className = "dc-parameter-value-icon dc-parameter-value-icon-" + descriptor.icon;
+        icon.setAttribute("aria-hidden", "true");
+        if (descriptor.icon === "clear") {
+          icon.src = "tree/icons/actions/clear.svg";
+          icon.alt = "";
         }
+        button.appendChild(icon);
         button.addEventListener("click", function (event) {
           selectParameter(parameter.id);
           requestParameterEdit(descriptor.action, algorithm.id, parameter.id);
@@ -899,6 +1164,11 @@
       row.appendChild(valueRow);
       row.addEventListener("click", function () {
         selectParameter(parameter.id);
+      });
+      row.addEventListener("contextmenu", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openParameterContextMenu(event, algorithm, parameter);
       });
       row.addEventListener("dblclick", function () {
         selectParameter(parameter.id);
@@ -1018,6 +1288,7 @@
       elements.tablesList.removeChild(elements.tablesList.firstChild);
     }
     var tables = state.workspace ? state.workspace.tables : [];
+    updateSectionCount(byId("dataconsole-tables-count"), tables.length);
     var canExecute = Boolean(state.workspace && state.workspace.canExecute);
     var selectedExists = tables.some(function (table) { return table.id === state.selectedTableId; });
     if (!selectedExists) {
@@ -1199,9 +1470,21 @@
     return state.algorithms.get(state.selectedAlgorithmId) || null;
   }
 
-  function closeWorkbenchDialog() {
+  function closeWorkbenchDialog(force) {
+    if (state.dialogPending && !force) {
+      return;
+    }
     elements.dialogBackdrop.hidden = true;
+    elements.dialogBackdrop.removeAttribute("aria-busy");
     state.dialogConfirm = null;
+    state.dialogPending = false;
+    state.dialogWaitForWorkspaceUpdate = false;
+    state.dialogConfirmLabel = "";
+    state.dialogPendingLabel = "";
+    state.dialogPendingMessage = "";
+    elements.dialogInput.disabled = false;
+    elements.dialogCancel.disabled = false;
+    elements.dialogConfirm.disabled = false;
     elements.dialogError.hidden = true;
     elements.dialogError.textContent = "";
     if (state.dialogRestoreFocus && typeof state.dialogRestoreFocus.focus === "function") {
@@ -1213,14 +1496,23 @@
   function showWorkbenchDialog(options) {
     state.dialogConfirm = options.onConfirm;
     state.dialogRestoreFocus = document.activeElement;
+    state.dialogPending = false;
+    state.dialogWaitForWorkspaceUpdate = Boolean(options.waitForWorkspaceUpdate);
+    state.dialogConfirmLabel = options.confirmLabel || "Продолжить";
+    state.dialogPendingLabel = options.pendingLabel || "Выполняется…";
+    state.dialogPendingMessage = options.pendingMessage || "Подождите, операция выполняется.";
     elements.dialogTitle.textContent = options.title;
     elements.dialogMessage.textContent = options.message || "";
     elements.dialogInput.hidden = !options.requiresName;
+    elements.dialogInput.disabled = false;
     elements.dialogInput.value = options.value || "";
     elements.dialogInput.setAttribute("aria-label", options.inputLabel || options.title);
     elements.dialogError.hidden = true;
     elements.dialogError.textContent = "";
-    elements.dialogConfirm.textContent = options.confirmLabel || "Продолжить";
+    elements.dialogCancel.disabled = false;
+    elements.dialogConfirm.disabled = false;
+    elements.dialogConfirm.textContent = state.dialogConfirmLabel;
+    elements.dialogBackdrop.removeAttribute("aria-busy");
     elements.dialogBackdrop.hidden = false;
     window.setTimeout(function () {
       if (options.requiresName) {
@@ -1233,6 +1525,9 @@
   }
 
   function confirmWorkbenchDialog() {
+    if (state.dialogPending) {
+      return;
+    }
     if (typeof state.dialogConfirm !== "function") {
       closeWorkbenchDialog();
       return;
@@ -1245,7 +1540,17 @@
       elements.dialogInput.focus();
       return;
     }
-    closeWorkbenchDialog();
+    if (state.dialogWaitForWorkspaceUpdate) {
+      state.dialogPending = true;
+      elements.dialogBackdrop.setAttribute("aria-busy", "true");
+      elements.dialogMessage.textContent = state.dialogPendingMessage;
+      elements.dialogInput.disabled = true;
+      elements.dialogCancel.disabled = true;
+      elements.dialogConfirm.disabled = true;
+      elements.dialogConfirm.textContent = state.dialogPendingLabel;
+    } else {
+      closeWorkbenchDialog();
+    }
     confirmAction(value);
   }
 
@@ -1272,7 +1577,13 @@
     if (!state.workspace || !state.workspace.canExecute) {
       return;
     }
-    emitBridgeEvent("EVENT_WORKSPACE_MUTATION_REQUESTED", mutationPayload(action, additional));
+
+    // Give the HTML document a chance to paint the closed dialog before the
+    // synchronous 1C event handler rebuilds the workspace.
+    var payload = mutationPayload(action, additional);
+    window.setTimeout(function () {
+      emitBridgeEvent("EVENT_WORKSPACE_MUTATION_REQUESTED", payload);
+    }, 0);
   }
 
   function addAlgorithmFromUi(asChild) {
@@ -1284,6 +1595,9 @@
       inputLabel: "Наименование алгоритма",
       requiresName: true,
       confirmLabel: "Добавить",
+      pendingLabel: "Добавление…",
+      pendingMessage: "Добавление алгоритма. Подождите…",
+      waitForWorkspaceUpdate: true,
       onConfirm: function (name) {
         requestWorkspaceMutation("add-algorithm", { name: name, parentAlgorithmId: parentAlgorithmId });
       }
@@ -1319,6 +1633,9 @@
       message: "Удалить «" + algorithm.name + "» вместе с вложенными алгоритмами и их параметрами?",
       requiresName: false,
       confirmLabel: "Удалить",
+      pendingLabel: "Удаление…",
+      pendingMessage: "Удаление алгоритма. Подождите…",
+      waitForWorkspaceUpdate: true,
       onConfirm: function () {
         requestWorkspaceMutation("delete-algorithm", {});
       }
@@ -1489,6 +1806,11 @@
         heading.focus();
       }
     });
+    heading.addEventListener("contextmenu", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openAlgorithmContextMenu(event, algorithm);
+    });
     heading.addEventListener("keydown", function (event) {
       if (event.key === "F2" || event.keyCode === 113) {
         if (state.selectedAlgorithmId !== algorithm.id) {
@@ -1537,8 +1859,48 @@
     elements.saveWorkspace.disabled = !canChange;
     elements.saveWorkspaceAs.disabled = !canChange;
     elements.emptyInitializing.hidden = state.workspaceInitialized;
+    elements.emptyRetry.hidden = state.workspaceInitialized || !state.initializationRetryVisible;
     elements.emptyOpen.hidden = !state.workspaceInitialized;
     elements.emptyOpen.disabled = state.workspaceBusy;
+  }
+
+  function scheduleInitializationRetry() {
+    if (state.initializationRetryTimer !== null) {
+      window.clearTimeout(state.initializationRetryTimer);
+    }
+    state.initializationRetryVisible = false;
+    state.initializationRetryTimer = window.setTimeout(function () {
+      state.initializationRetryTimer = null;
+      if (!state.workspaceInitialized) {
+        state.initializationRetryVisible = true;
+        renderFileState();
+      }
+    }, 15000);
+  }
+
+  function retryInitializationAfterCacheClear() {
+    var eventButton = byId("event-button");
+    if (state.workspaceInitialized || !eventButton) {
+      return;
+    }
+    state.initializationRetryVisible = false;
+    renderFileState();
+    var eventData = {
+      event: "EVENT_WORKSPACE_CACHE_RESET_REQUESTED",
+      params: {}
+    };
+    if (Array.isArray(window.events_queue)) {
+      window.events_queue.push(eventData);
+    }
+    var attachEventData = function (event) {
+      event.eventData1C = eventData;
+    };
+    eventButton.addEventListener("click", attachEventData, true);
+    try {
+      eventButton.click();
+    } finally {
+      eventButton.removeEventListener("click", attachEventData, true);
+    }
   }
 
   function setWorkspaceBusy(payloadJson) {
@@ -1803,12 +2165,20 @@
         state.searchExpandedAlgorithms = new Map();
       }
       renderWorkspace();
+      if (nextDocument) {
+        restoreSelectedAlgorithmPosition(nextDocument.algorithmId);
+      }
       applyEditorSettings(state.workspace.settings.editor);
 
       if (nextDocument) {
         activateDocumentById(nextDocument.id, false);
       }
       state.workspaceInitialized = true;
+      state.initializationRetryVisible = false;
+      if (state.initializationRetryTimer !== null) {
+        window.clearTimeout(state.initializationRetryTimer);
+        state.initializationRetryTimer = null;
+      }
       renderFileState();
       return {
         success: true,
@@ -1828,6 +2198,71 @@
     operations.forEach(function (operation) {
       if (!operation || typeof operation !== "object") {
         throw new Error("Операция patch должна быть объектом.");
+      }
+      if (operation.op === "addAlgorithm") {
+        var parentAlgorithmId = operation.parentAlgorithmId === undefined || operation.parentAlgorithmId === null
+          ? ""
+          : String(operation.parentAlgorithmId);
+        if (parentAlgorithmId && !state.algorithms.has(parentAlgorithmId)) {
+          throw new Error("Родительский алгоритм не найден: " + parentAlgorithmId + ".");
+        }
+        var indexedAlgorithm = validateAndIndexWorkspace({
+          sessionId: state.workspace.sessionId,
+          algorithms: [operation.algorithm],
+          tables: [],
+          settings: {}
+        });
+        var addedAlgorithms = [];
+        var addedDocuments = [];
+        collectAlgorithmTree(indexedAlgorithm.workspace.algorithms[0], addedAlgorithms, addedDocuments);
+        addedAlgorithms.forEach(function (algorithm) {
+          if (state.algorithms.has(algorithm.id)) {
+            throw new Error("Повторяется идентификатор алгоритма: " + algorithm.id + ".");
+          }
+        });
+        addedDocuments.forEach(function (documentItem) {
+          if (state.documents.has(documentItem.id)) {
+            throw new Error("Повторяется идентификатор документа: " + documentItem.id + ".");
+          }
+        });
+        setAlgorithmDepth(indexedAlgorithm.workspace.algorithms[0], parentAlgorithmId || null,
+          parentAlgorithmId ? state.algorithms.get(parentAlgorithmId).depth + 1 : 0);
+        operation.normalizedAlgorithm = indexedAlgorithm.workspace.algorithms[0];
+        operation.normalizedSelectedAlgorithmId = requiredIdentity(
+          operation.selectedAlgorithmId === undefined || operation.selectedAlgorithmId === null
+            ? operation.normalizedAlgorithm.id
+            : operation.selectedAlgorithmId,
+          "operation.selectedAlgorithmId");
+        if (!addedAlgorithms.some(function (algorithm) {
+          return algorithm.id === operation.normalizedSelectedAlgorithmId;
+        })) {
+          throw new Error("Выбранный алгоритм не входит в добавляемую ветку.");
+        }
+        return;
+      }
+      if (operation.op === "removeAlgorithm") {
+        var removeAlgorithmId = requiredIdentity(operation.algorithmId, "operation.algorithmId");
+        if (!state.algorithms.has(removeAlgorithmId)) {
+          throw new Error("Алгоритм не найден: " + removeAlgorithmId + ".");
+        }
+        operation.algorithmId = removeAlgorithmId;
+        operation.normalizedSelectedAlgorithmId = operation.selectedAlgorithmId === undefined
+          || operation.selectedAlgorithmId === null
+          ? ""
+          : String(operation.selectedAlgorithmId);
+        if (operation.normalizedSelectedAlgorithmId) {
+          if (!state.algorithms.has(operation.normalizedSelectedAlgorithmId)) {
+            throw new Error("Выбранный алгоритм не найден: " + operation.normalizedSelectedAlgorithmId + ".");
+          }
+          var removedAlgorithmIds = [];
+          collectAlgorithmTree(state.algorithms.get(removeAlgorithmId), removedAlgorithmIds, []);
+          if (removedAlgorithmIds.some(function (algorithm) {
+            return algorithm.id === operation.normalizedSelectedAlgorithmId;
+          })) {
+            throw new Error("После удаления выбран удаляемый алгоритм.");
+          }
+        }
+        return;
       }
       if (operation.op === "replaceDocumentText") {
         requiredIdentity(operation.documentId, "operation.documentId");
@@ -1931,6 +2366,135 @@
     return operations;
   }
 
+  function applyAddAlgorithmPatch(operation) {
+    var algorithm = operation.normalizedAlgorithm;
+    var parentAlgorithm = algorithm.parentId ? state.algorithms.get(algorithm.parentId) : null;
+    var renderedParent;
+    var renderedNode;
+    var targetAlgorithm;
+    var targetDocument;
+
+    registerAlgorithmTree(algorithm);
+    if (parentAlgorithm) {
+      parentAlgorithm.children.push(algorithm);
+    } else {
+      state.workspace.algorithms.push(algorithm);
+    }
+    state.workspace.modified = operation.modified === undefined ? true : Boolean(operation.modified);
+    state.workspace.selectedAlgorithmId = operation.normalizedSelectedAlgorithmId;
+
+    if (state.searchQuery) {
+      renderWorkspace();
+    } else {
+      renderedParent = parentAlgorithm ? state.algorithmNodes.get(parentAlgorithm.id) : null;
+      renderedNode = createAlgorithmNode(
+        algorithm,
+        parentAlgorithm ? parentAlgorithm.children.length - 1 : state.workspace.algorithms.length - 1,
+        null
+      );
+      if (renderedParent) {
+        ensureAlgorithmChildrenContainer(renderedParent).appendChild(renderedNode);
+        updateRenderedAlgorithmChildrenState(parentAlgorithm.id);
+      } else {
+        elements.tree.appendChild(renderedNode);
+      }
+      elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0;
+      elements.searchEmpty.hidden = true;
+    }
+
+    state.selectedParameterId = null;
+    targetAlgorithm = state.algorithms.get(operation.normalizedSelectedAlgorithmId);
+    if (targetAlgorithm) {
+      selectAlgorithmInTree(targetAlgorithm.id, true);
+      targetDocument = preferredDocumentForAlgorithm(targetAlgorithm);
+      if (targetDocument) {
+        activateDocumentById(targetDocument.id, false);
+      } else {
+        clearActiveDocument();
+      }
+    } else {
+      clearActiveDocument();
+    }
+    renderFileState();
+    completePendingWorkspaceMutation();
+  }
+
+  function applyRemoveAlgorithmPatch(operation) {
+    var algorithm = state.algorithms.get(operation.algorithmId);
+    var parentAlgorithm = algorithm.parentId ? state.algorithms.get(algorithm.parentId) : null;
+    var removedAlgorithms = [];
+    var removedDocuments = [];
+    var rendered = state.algorithmNodes.get(algorithm.id);
+    var selectedAlgorithm;
+    var selectedDocument;
+
+    collectAlgorithmTree(algorithm, removedAlgorithms, removedDocuments);
+    if (state.activeDocumentId && removedDocuments.some(function (documentItem) {
+      return documentItem.id === state.activeDocumentId;
+    })) {
+      clearActiveDocument();
+    }
+
+    if (parentAlgorithm) {
+      parentAlgorithm.children = parentAlgorithm.children.filter(function (child) {
+        return child.id !== algorithm.id;
+      });
+    } else {
+      state.workspace.algorithms = state.workspace.algorithms.filter(function (root) {
+        return root.id !== algorithm.id;
+      });
+    }
+
+    removedDocuments.forEach(function (documentItem) {
+      state.documentButtons.delete(documentItem.id);
+      var model = state.models.get(documentItem.id);
+      if (model && !model.isDisposed()) {
+        model.dispose();
+      }
+      state.models.delete(documentItem.id);
+      state.viewStates.delete(documentItem.id);
+      state.documents.delete(documentItem.id);
+    });
+    removedAlgorithms.forEach(function (removedAlgorithm) {
+      state.algorithmNodes.delete(removedAlgorithm.id);
+      state.algorithms.delete(removedAlgorithm.id);
+      state.expandedAlgorithms.delete(removedAlgorithm.id);
+      state.searchExpandedAlgorithms.delete(removedAlgorithm.id);
+    });
+    if (rendered && rendered.node.parentNode) {
+      rendered.node.parentNode.removeChild(rendered.node);
+    }
+    if (parentAlgorithm) {
+      updateRenderedAlgorithmChildrenState(parentAlgorithm.id);
+    }
+
+    state.workspace.modified = operation.modified === undefined ? true : Boolean(operation.modified);
+    state.workspace.selectedAlgorithmId = operation.normalizedSelectedAlgorithmId;
+    state.selectedParameterId = null;
+    if (state.searchQuery) {
+      renderWorkspace();
+    } else {
+      elements.explorerEmpty.hidden = state.workspace.algorithms.length > 0;
+      elements.searchEmpty.hidden = true;
+    }
+
+    selectedAlgorithm = state.algorithms.get(operation.normalizedSelectedAlgorithmId);
+    if (selectedAlgorithm) {
+      selectAlgorithmInTree(selectedAlgorithm.id, true);
+      selectedDocument = preferredDocumentForAlgorithm(selectedAlgorithm);
+      if (selectedDocument) {
+        activateDocumentById(selectedDocument.id, false);
+      } else {
+        clearActiveDocument();
+      }
+    } else {
+      state.selectedAlgorithmId = null;
+      clearActiveDocument();
+    }
+    renderFileState();
+    completePendingWorkspaceMutation();
+  }
+
   function applyPatch(patchJson) {
     try {
       if (!state.workspace) {
@@ -1939,7 +2503,11 @@
       var patch = parseJsonValue(patchJson, "applyPatch");
       var operations = validatePatch(patch);
       operations.forEach(function (operation) {
-        if (operation.op === "replaceDocumentText") {
+        if (operation.op === "addAlgorithm") {
+          applyAddAlgorithmPatch(operation);
+        } else if (operation.op === "removeAlgorithm") {
+          applyRemoveAlgorithmPatch(operation);
+        } else if (operation.op === "replaceDocumentText") {
           var documentItem = state.documents.get(String(operation.documentId));
           documentItem.text = String(operation.text);
           documentItem.hasContent = operation.hasContent === undefined
@@ -2048,6 +2616,7 @@
       }
       return { success: true, applied: operations.length };
     } catch (error) {
+      failPendingWorkspaceMutation(error.message);
       return reportError("applyPatch", error);
     }
   }
@@ -2096,6 +2665,7 @@
       }
       var restoringSidebar = visible && !state.sidebarVisible;
       state.sidebarVisible = visible;
+      saveLayoutState();
       elements.workbench.classList.toggle("dc-sidebar-hidden", !visible);
       elements.togglePrimarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
       if (restoringSidebar) {
@@ -2131,6 +2701,7 @@
         throw new Error("setParametersVisible ожидает Булево.");
       }
       state.parametersVisible = visible;
+      saveLayoutState();
       elements.workbench.classList.toggle("dc-secondary-sidebar-hidden", !visible);
       elements.toggleSecondarySidebar.setAttribute("aria-pressed", visible ? "true" : "false");
       window.setTimeout(function () {
@@ -2227,6 +2798,66 @@
         event.preventDefault();
       }
     });
+    document.addEventListener("click", function (event) {
+      if (state.contextMenu && !state.contextMenu.contains(event.target)) {
+        closeContextMenu();
+      }
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" || event.keyCode === 27) {
+        closeContextMenu();
+      }
+    });
+  }
+
+  function initializeSecondarySectionControls() {
+    var parametersHeader = document.querySelector(".dc-parameters-header");
+    var tablesHeader = document.querySelector(".dc-tables-header");
+    if (parametersHeader) {
+      parametersHeader.title = "Двойной щелчок: свернуть или развернуть параметры";
+      parametersHeader.addEventListener("dblclick", function () {
+        state.parametersSectionExpanded = !state.parametersSectionExpanded;
+        applySecondarySectionState();
+      });
+    }
+    if (elements.parametersSectionToggle) {
+      elements.parametersSectionToggle.setAttribute("role", "button");
+      elements.parametersSectionToggle.tabIndex = 0;
+      elements.parametersSectionToggle.addEventListener("click", function (event) {
+        event.stopPropagation();
+        state.parametersSectionExpanded = !state.parametersSectionExpanded;
+        applySecondarySectionState();
+      });
+      elements.parametersSectionToggle.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+          event.preventDefault();
+          elements.parametersSectionToggle.click();
+        }
+      });
+    }
+    if (tablesHeader) {
+      tablesHeader.title = "Двойной щелчок: свернуть или развернуть результаты";
+      tablesHeader.addEventListener("dblclick", function () {
+        state.tablesSectionExpanded = !state.tablesSectionExpanded;
+        applySecondarySectionState();
+      });
+    }
+    if (elements.tablesSectionToggle) {
+      elements.tablesSectionToggle.setAttribute("role", "button");
+      elements.tablesSectionToggle.tabIndex = 0;
+      elements.tablesSectionToggle.addEventListener("click", function (event) {
+        event.stopPropagation();
+        state.tablesSectionExpanded = !state.tablesSectionExpanded;
+        applySecondarySectionState();
+      });
+      elements.tablesSectionToggle.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.keyCode === 13 || event.key === " " || event.keyCode === 32) {
+          event.preventDefault();
+          elements.tablesSectionToggle.click();
+        }
+      });
+    }
+    applySecondarySectionState();
   }
 
   function initializeLayoutControls() {
@@ -2427,6 +3058,8 @@
     elements.saveWorkspace.addEventListener("click", function () { requestWorkspaceSave(false); });
     elements.saveWorkspaceAs.addEventListener("click", function () { requestWorkspaceSave(true); });
     elements.emptyOpen.addEventListener("click", requestWorkspaceOpen);
+    elements.emptyRetry.addEventListener("click", retryInitializationAfterCacheClear);
+    scheduleInitializationRetry();
     if (!state.globalSaveHandlerInstalled) {
       document.addEventListener("keydown", function (event) {
         var key = String(event.key || "").toLowerCase();
@@ -2654,11 +3287,13 @@
 
   function initialize() {
     cacheElements();
+    restoreLayoutState();
     initializeWorkspaceFileControls();
     byId("dataconsole-collapse-all").addEventListener("click", collapseAll);
     elements.fillParameters.addEventListener("click", fillParametersFromUi);
     initializeSearch();
     initializeMutationControls();
+    initializeSecondarySectionControls();
     initializeLayoutControls();
     initializeTableControls();
     initializeSettingsControls();

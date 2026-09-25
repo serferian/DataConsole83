@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" version="2.20">
+	<ExternalDataProcessor uuid="f440bb54-f28a-4a8a-95b7-a100c274eb04">
+		<InternalInfo>
+			<xr:ContainedObject>
+				<xr:ClassId>c3831ec8-d8d5-4f93-8a22-f9bfae07327f</xr:ClassId>
+				<xr:ObjectId>2c76c4b3-eae6-4d9f-81f9-55a47fecd359</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:GeneratedType name="ExternalDataProcessorObject.ИсполнительКодаСервер" category="Object">
+				<xr:TypeId>78ddeb7e-f230-4802-9a3d-6421438cbf19</xr:TypeId>
+				<xr:ValueId>e7c328e4-1abe-4f5d-a2d0-32ef3e9fff04</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>ИсполнительКодаСервер</Name>
+			<Synonym>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Исполнитель кода на сервере</v8:content>
+				</v8:item>
+			</Synonym>
+			<Comment>Служебный шаблон DataConsole83</Comment>
+			<DefaultForm>ExternalDataProcessor.ИсполнительКодаСервер.Form.ИсполнительКодаКлиент</DefaultForm>
+			<AuxiliaryForm/>
+		</Properties>
+		<ChildObjects>
+			<Form>ИсполнительКодаКлиент</Form>
+		</ChildObjects>
+	</ExternalDataProcessor>
+</MetaDataObject>

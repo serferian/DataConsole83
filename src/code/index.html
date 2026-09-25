@@ -16,36 +16,37 @@
     <aside id="dataconsole-explorer" class="dc-explorer" aria-label="Проводник алгоритмов">
       <div class="dc-explorer-header">
         <div class="dc-explorer-heading">
-          <div class="dc-explorer-title">АЛГОРИТМЫ</div>
+          <div class="dc-explorer-title-row">
+            <div class="dc-explorer-title">АЛГОРИТМЫ</div>
+            <div class="dc-file-actions" aria-label="Операции с файлом алгоритмов">
+              <button id="dataconsole-new-workspace" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Создать файл алгоритмов" title="Новый файл алгоритмов"><img class="dc-action-image" src="tree/icons/actions/create_new_folder.svg" alt=""></button>
+              <button id="dataconsole-open-workspace" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Открыть файл алгоритмов" title="Открыть файл алгоритмов"><img class="dc-action-image" src="tree/icons/actions/folder_open.svg" alt=""></button>
+              <button id="dataconsole-save-workspace" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Сохранить файл алгоритмов" title="Сохранить файл алгоритмов (Ctrl+S)"><img class="dc-action-image" src="tree/icons/actions/save.svg" alt=""></button>
+              <button id="dataconsole-save-workspace-as" class="dc-icon-button dc-file-action" type="button"
+                aria-label="Сохранить файл алгоритмов как" title="Сохранить файл алгоритмов как"><img class="dc-action-image" src="tree/icons/actions/save_as.svg" alt=""></button>
+            </div>
+          </div>
           <div id="dataconsole-file-name" class="dc-file-name">Рабочая область не открыта</div>
         </div>
         <div class="dc-explorer-actions">
-          <button id="dataconsole-new-workspace" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Создать файл алгоритмов" title="Новый файл алгоритмов">◇</button>
-          <button id="dataconsole-open-workspace" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Открыть файл алгоритмов" title="Открыть файл алгоритмов">↗</button>
-          <button id="dataconsole-save-workspace" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Сохранить файл алгоритмов" title="Сохранить файл алгоритмов (Ctrl+S)">↓</button>
-          <button id="dataconsole-save-workspace-as" class="dc-icon-button dc-file-action" type="button"
-            aria-label="Сохранить файл алгоритмов как" title="Сохранить файл алгоритмов как">⇲</button>
-          <span class="dc-explorer-action-separator" aria-hidden="true"></span>
-          <button id="dataconsole-add-algorithm" class="dc-icon-button" type="button"
-            aria-label="Добавить алгоритм" title="Добавить алгоритм рядом">+</button>
-          <button id="dataconsole-add-child-algorithm" class="dc-icon-button" type="button"
-            aria-label="Добавить вложенный алгоритм" title="Добавить вложенный алгоритм">↳</button>
-          <button id="dataconsole-delete-algorithm" class="dc-icon-button" type="button"
-            aria-label="Удалить алгоритм" title="Удалить выбранный алгоритм">−</button>
-          <button id="dataconsole-collapse-all" class="dc-icon-button" type="button"
-            aria-label="Свернуть все" title="Свернуть все">⇤</button>
-        </div>
-      </div>
-      <div class="dc-search-row">
-        <div id="dataconsole-search-control" class="dc-search-control">
-          <input id="dataconsole-search" class="dc-search-input" type="text"
-            placeholder="Найти алгоритм или код" aria-label="Найти алгоритм или код"
-            autocomplete="off" spellcheck="false">
-          <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
-            aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+          <div id="dataconsole-search-control" class="dc-search-control dc-tree-search-control">
+            <input id="dataconsole-search" class="dc-search-input" type="text"
+              placeholder="Найти алгоритм или код" aria-label="Найти алгоритм или код"
+              autocomplete="off" spellcheck="false">
+            <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
+              aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+          </div>
+          <button id="dataconsole-add-algorithm" class="dc-icon-button dc-action-add" type="button"
+            aria-label="Добавить алгоритм" title="Добавить алгоритм рядом"><img class="dc-action-image" src="tree/icons/actions/add.svg" alt=""></button>
+          <button id="dataconsole-add-child-algorithm" class="dc-icon-button dc-action-add-child" type="button"
+            aria-label="Добавить вложенный алгоритм" title="Добавить вложенный алгоритм"><img class="dc-action-image" src="tree/icons/actions/subdirectory_arrow_right.svg" alt=""></button>
+          <button id="dataconsole-delete-algorithm" class="dc-icon-button dc-action-delete" type="button"
+            aria-label="Удалить алгоритм" title="Удалить выбранный алгоритм"><img class="dc-action-image" src="tree/icons/actions/delete.svg" alt=""></button>
+          <button id="dataconsole-collapse-all" class="dc-icon-button dc-action-collapse" type="button"
+            aria-label="Свернуть все" title="Свернуть все"><img class="dc-action-image" src="tree/icons/actions/unfold_less.svg" alt=""></button>
         </div>
       </div>
       <div id="dataconsole-algorithm-tree" class="dc-tree" role="tree" aria-label="Алгоритмы"></div>
@@ -57,6 +58,7 @@
           <span class="dc-workspace-spinner dc-empty-spinner" aria-hidden="true"></span>
           <span>Загрузка алгоритмов…</span>
         </span>
+        <button id="dataconsole-empty-retry" class="dc-empty-retry" type="button" hidden>Очистить кеш и повторить</button>
         <button id="dataconsole-empty-open" type="button" hidden>Открыть файл</button>
       </div>
     </aside>
@@ -138,22 +140,22 @@
           <section class="dc-secondary-section dc-parameters-section" aria-label="Параметры алгоритма">
             <div class="dc-parameters-header">
               <div class="dc-parameters-heading">
-                <div class="dc-parameters-title">ПАРАМЕТРЫ</div>
+                <div class="dc-parameters-title"><span id="dataconsole-parameters-toggle" class="dc-section-toggle-glyph" aria-hidden="true"></span>ПАРАМЕТРЫ<span id="dataconsole-parameters-count" class="dc-section-count"></span></div>
                 <div id="dataconsole-parameters-algorithm" class="dc-parameters-algorithm">Выберите алгоритм</div>
               </div>
               <div class="dc-parameters-actions">
-                <button id="dataconsole-edit-parameter" class="dc-icon-button dc-parameter-edit-action" type="button"
-                  aria-label="Изменить значение выбранного параметра" title="Изменить значение выбранного параметра" disabled>&#9998;</button>
-                <button id="dataconsole-copy-parameter" class="dc-icon-button dc-parameter-copy-action" type="button"
-                  aria-label="Копировать выбранный параметр" title="Копировать выбранный параметр (F9)" disabled></button>
-                <button id="dataconsole-clear-parameter" class="dc-icon-button dc-parameter-clear-action" type="button"
-                  aria-label="Очистить значение выбранного параметра" title="Очистить значение выбранного параметра" disabled>&times;</button>
                 <button id="dataconsole-fill-parameters" class="dc-fill-parameters" type="button"
                   aria-label="Заполнить параметры запроса" title="Заполнить параметры запроса" hidden>Заполнить</button>
-                <button id="dataconsole-add-parameter" class="dc-icon-button" type="button"
-                  aria-label="Добавить параметр" title="Добавить параметр">+</button>
-                <button id="dataconsole-delete-parameter" class="dc-icon-button" type="button"
-                  aria-label="Удалить параметр" title="Удалить выбранный параметр">−</button>
+                <button id="dataconsole-edit-parameter" class="dc-icon-button dc-parameter-edit-action dc-action-edit" type="button"
+                  aria-label="Изменить значение выбранного параметра" title="Изменить значение выбранного параметра" disabled><img class="dc-action-image" src="tree/icons/actions/edit.svg" alt=""></button>
+                <button id="dataconsole-copy-parameter" class="dc-icon-button dc-parameter-copy-action" type="button"
+                  aria-label="Копировать выбранный параметр" title="Копировать выбранный параметр (F9)" disabled><img class="dc-action-image" src="tree/icons/actions/content_copy.svg" alt=""></button>
+                <button id="dataconsole-clear-parameter" class="dc-icon-button dc-parameter-clear-action dc-action-clear" type="button"
+                  aria-label="Очистить значение выбранного параметра" title="Очистить значение выбранного параметра" disabled><img class="dc-action-image" src="tree/icons/actions/clear.svg" alt=""></button>
+                <button id="dataconsole-add-parameter" class="dc-icon-button dc-action-add" type="button"
+                  aria-label="Добавить параметр" title="Добавить параметр"><img class="dc-action-image" src="tree/icons/actions/add.svg" alt=""></button>
+                <button id="dataconsole-delete-parameter" class="dc-icon-button dc-action-delete" type="button"
+                  aria-label="Удалить параметр" title="Удалить выбранный параметр"><img class="dc-action-image" src="tree/icons/actions/delete.svg" alt=""></button>
               </div>
             </div>
             <div id="dataconsole-parameters-list" class="dc-parameters-list">
@@ -161,9 +163,9 @@
             </div>
           </section>
           <div class="dc-secondary-divider" aria-hidden="true"></div>
-          <section class="dc-secondary-section dc-tables-section" aria-label="Таблицы запроса">
+          <section class="dc-secondary-section dc-tables-section" aria-label="Таблицы">
             <div class="dc-tables-header">
-              <div class="dc-tables-title">ТАБЛИЦЫ</div>
+              <div class="dc-tables-title"><span id="dataconsole-tables-toggle" class="dc-section-toggle-glyph" aria-hidden="true"></span>Таблицы<span id="dataconsole-tables-count" class="dc-section-count"></span></div>
               <div class="dc-tables-actions">
                 <button id="dataconsole-toggle-measurements" class="dc-secondary-action" type="button"
                   aria-label="Включить замеры выполнения" aria-pressed="false" title="Включить замеры выполнения">Замеры</button>
