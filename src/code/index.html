@@ -14,6 +14,15 @@
 
   <div id="dataconsole-workbench" class="dc-workbench">
     <aside id="dataconsole-explorer" class="dc-explorer" aria-label="Проводник алгоритмов">
+      <div class="dc-search-row">
+        <div id="dataconsole-search-control" class="dc-search-control">
+          <input id="dataconsole-search" class="dc-search-input" type="text"
+            placeholder="Найти алгоритм или код" aria-label="Найти алгоритм или код"
+            autocomplete="off" spellcheck="false">
+          <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
+            aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+        </div>
+      </div>
       <div class="dc-explorer-header">
         <div class="dc-explorer-heading">
           <div class="dc-explorer-title-row">
@@ -40,15 +49,6 @@
             aria-label="Удалить алгоритм" title="Удалить выбранный алгоритм"><img class="dc-action-image" src="tree/icons/actions/delete.svg" alt=""></button>
           <button id="dataconsole-collapse-all" class="dc-icon-button dc-action-collapse" type="button"
             aria-label="Свернуть все" title="Свернуть все"><img class="dc-action-image" src="tree/icons/actions/unfold_less.svg" alt=""></button>
-        </div>
-      </div>
-      <div class="dc-search-row">
-        <div id="dataconsole-search-control" class="dc-search-control">
-          <input id="dataconsole-search" class="dc-search-input" type="text"
-            placeholder="Найти алгоритм или код" aria-label="Найти алгоритм или код"
-            autocomplete="off" spellcheck="false">
-          <button id="dataconsole-search-clear" class="dc-search-clear" type="button"
-            aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
         </div>
       </div>
       <div id="dataconsole-algorithm-tree" class="dc-tree" role="tree" aria-label="Алгоритмы"></div>
