@@ -1029,7 +1029,7 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   display: inline-block;
   width: 13px;
   height: 9px;
-  margin-left: 7px;
+  margin-right: 7px;
   border: 1px solid var(--dc-muted);
   border-radius: 2px;
   vertical-align: 1px;
@@ -1057,8 +1057,6 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
 }
 .dc-parameters-pane.dc-parameters-collapsed .dc-tables-section,
 .dc-parameters-pane.dc-tables-collapsed .dc-parameters-section { flex: 1 1 auto; }
-.dc-parameters-pane.dc-parameters-collapsed .dc-secondary-divider,
-.dc-parameters-pane.dc-tables-collapsed .dc-secondary-divider { display: none; }
 
 .dc-parameters-heading { flex: 1 1 auto; min-width: 0; }
 .dc-parameters-title { font-size: 10px; font-weight: 700; line-height: 15px; letter-spacing: .07em; }
