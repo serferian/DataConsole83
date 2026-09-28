@@ -2226,6 +2226,7 @@
           throw new Error("Родительский алгоритм не найден: " + parentAlgorithmId + ".");
         }
         var indexedAlgorithm = validateAndIndexWorkspace({
+          formatVersion: WORKSPACE_FORMAT_VERSION,
           sessionId: state.workspace.sessionId,
           algorithms: [operation.algorithm],
           tables: [],
