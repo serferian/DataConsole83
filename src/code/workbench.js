@@ -890,6 +890,9 @@
       state.selectedParameterId = null;
     }
     state.selectedAlgorithmId = normalizedAlgorithmId;
+    if (state.workspace) {
+      state.workspace.selectedAlgorithmId = normalizedAlgorithmId;
+    }
     revealSelectedAlgorithm(normalizedAlgorithmId);
     updateRenderedAlgorithmStates();
   }
