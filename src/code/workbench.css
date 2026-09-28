@@ -1041,24 +1041,22 @@ body.dc-resizing .dc-parameters-splitter::after { opacity: 1; }
   position: relative;
   display: inline-block;
   width: 13px;
-  height: 9px;
-  margin-right: 7px;
-  border: 1px solid var(--dc-muted);
-  border-radius: 2px;
-  vertical-align: 1px;
+  height: 18px;
+  margin-right: 4px;
+  color: var(--dc-muted);
+  vertical-align: -4px;
   cursor: pointer;
   box-sizing: border-box;
 }
-.dc-section-toggle-glyph::after {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  bottom: 2px;
-  left: 2px;
-  background: var(--dc-selected-edge);
-  content: "";
+.dc-section-toggle-glyph::before {
+  display: inline-block;
+  content: "›";
+  font: 18px/18px "Segoe UI Symbol", "Segoe UI", Arial, sans-serif;
+  transform-origin: 50% 54%;
+  transition: transform 100ms ease;
 }
-.dc-section-toggle-glyph.dc-section-toggle-collapsed::after { background: var(--dc-muted); }
+.dc-section-toggle-glyph:not(.dc-section-toggle-collapsed)::before { transform: rotate(90deg); }
+.dc-section-toggle-glyph.dc-section-toggle-collapsed::before { transform: none; }
 .dc-section-toggle-glyph:focus { outline: 1px solid var(--dc-focus); outline-offset: 2px; }
 .dc-secondary-section.dc-section-collapsed > :not(.dc-parameters-header):not(.dc-tables-header) { display: none; }
 .dc-secondary-section.dc-section-collapsed > .dc-parameters-header,
