@@ -14,6 +14,8 @@ tools\decompileEpfErf.cmd ".build\DtCons83Monaco.epf"
 git diff --check
 ```
 
+Перед каждой сборкой `tools\compileEpfErf.cmd` автоматически увеличивает patch-версию в `СведенияОВнешнейОбработке()` объектного модуля. Комментарий метаданных не используется как источник версии.
+
 Скрипты используют устаревшие команды `vrunner compileepf/decompileepf`. У установленного `vanessa-runner 3.x` актуальны `vrunner epf compile/decompile`; не считайте сборку успешной без проверки exit code и наличия артефакта.
 
 ## Стиль и границы изменений

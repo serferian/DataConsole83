@@ -169,7 +169,8 @@
       if (item.icon) {
         var icon = document.createElement("img");
         icon.className = "dc-context-menu-icon";
-        icon.src = "tree/icons/actions/" + item.icon + ".svg";
+        icon.src = "tree/icons/actions/" + item.icon
+          + (item.icon.indexOf(".") >= 0 ? "" : ".svg");
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
         button.appendChild(icon);
@@ -216,7 +217,8 @@
       { label: "Добавить параметр", icon: "add", action: addParameterFromUi },
       { label: "Копировать параметр", icon: "content_copy", action: copySelectedParameterFromUi },
       { label: "Изменить значение", icon: "edit", action: function () { editSelectedParameterFromUi("edit"); } },
-      { label: "Удалить параметр", icon: "delete", action: deleteParameterFromUi }
+      { label: "Удалить параметр", icon: "delete", action: deleteParameterFromUi },
+      { label: "Очистить параметры алгоритма", icon: "clear_parameters.png", action: function () { clearParametersFromUi(algorithm); } }
     ]);
   }
 
@@ -267,7 +269,7 @@
     elements.parametersList = byId("dataconsole-parameters-list");
     elements.editParameter = byId("dataconsole-edit-parameter");
     elements.copyParameter = byId("dataconsole-copy-parameter");
-    elements.clearParameter = byId("dataconsole-clear-parameter");
+    elements.clearParameters = byId("dataconsole-clear-parameters");
     elements.fillParameters = byId("dataconsole-fill-parameters");
     elements.addParameter = byId("dataconsole-add-parameter");
     elements.deleteParameter = byId("dataconsole-delete-parameter");
@@ -1221,7 +1223,7 @@
     elements.deleteParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
     elements.editParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
     elements.copyParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
-    elements.clearParameter.disabled = !canMutate || !hasAlgorithm || !state.selectedParameterId;
+    elements.clearParameters.disabled = !canMutate || !hasAlgorithm || !algorithm.parameters.length;
   }
 
   function requestParameterEdit(action, algorithmId, parameterId) {
@@ -2678,6 +2680,22 @@
     }
   }
 
+  function clearParametersFromUi(algorithm) {
+    algorithm = algorithm || currentAlgorithm();
+    if (!algorithm || !algorithm.parameters.length || !state.workspace || !state.workspace.canExecute) {
+      return;
+    }
+    showWorkbenchDialog({
+      title: "Очистка параметров",
+      message: "Удалить все параметры алгоритма «" + algorithm.name + "»?",
+      requiresName: false,
+      confirmLabel: "Очистить",
+      onConfirm: function () {
+        requestWorkspaceMutation("clear-parameters", { algorithmId: algorithm.id });
+      }
+    });
+  }
+
   function getWorkspaceSnapshot() {
     try {
       if (!state.workspace) {
@@ -2850,7 +2868,7 @@
     elements.deleteParameter.addEventListener("click", deleteParameterFromUi);
     elements.editParameter.addEventListener("click", function () { editSelectedParameterFromUi("edit"); });
     elements.copyParameter.addEventListener("click", copySelectedParameterFromUi);
-    elements.clearParameter.addEventListener("click", function () { editSelectedParameterFromUi("clear"); });
+    elements.clearParameters.addEventListener("click", function () { clearParametersFromUi(); });
     elements.dialogCancel.addEventListener("click", closeWorkbenchDialog);
     elements.dialogConfirm.addEventListener("click", confirmWorkbenchDialog);
     elements.dialogBackdrop.addEventListener("click", function (event) {
